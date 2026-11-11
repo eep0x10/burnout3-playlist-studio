@@ -1,0 +1,41 @@
+Burnout3 Playlist Studio — Core verification
+Executed: .NET 10, Release, 2026-11-10.
+Command: dotnet run --project Tests/Burnout3.PlaylistStudio.Tests.csproj -c Release
+Result: SUCCESS 50 synthetic checks. Build: zero warnings, zero errors.
+
+No real music, personal credentials, real game configuration, or network was used by this suite. Tool execution and HTTP were injected fakes; local source files contained synthetic test bytes. Network and real-FFmpeg acceptance probes belong to the principal agent and are not claimed as this suite's execution.
+
+Coverage:
+- Portable library JSON atomic replacement/.bak, detached snapshots, stable isolated GUIDs, CRUD/reorder and multiple service instances without lost writes.
+- Text and quoted CSV imports, size/metadata bounds, YouTube host and explicit-playlist handling, public Spotify visible metadata with unknown completeness, official pagination cycle detection, bearer token excluded from persistence.
+- Search candidate scoring, safe ytsearch argument construction, ignore-config and -- boundaries, single-video flow, MP3 workflow, ID3 user-album override, optional ffprobe duration, automatic synthetic LRC, best-effort lyric failure, original local audio untouched.
+- Destination soundtrack/natural-order names, manifest/hash validation, managed backups outside scanned root, missing/failed current track keeps prior installed copy, removed IDs remove only unchanged managed files, user-modified/unmanaged/stock files retained, malicious path traversal refused.
+- Takedawn v0.2.0 custom_music_dir-only TOML patch and exact original backup; noncanonical audio sections/inline keys refuse rewriting, Unicode paths use literal UTF-8 rather than invalid TOML surrogate escapes.
+- Unreceipted tools refused; wrong official-download SHA rejected before install/execution; cancellation with terminal job states and owned-staging cleanup.
+
+Final core behaviours and limits:
+- Default data/ and tools/ live beside the application. Audio and sidecars resolve from playlist/track GUIDs, so ready library files move with data/. Third-party tools are first-use downloads, not bundled binaries.
+- yt-dlp 2026.10.26 and Deno 2.9.8 downloads use researched SHA-256 pins; FFmpeg 9.0.2 Gyan essentials ZIP uses its published .sha256. Extraction selects only named tool executables; receipts record source/version/hash and later mismatches are rejected.
+- Processes use ArgumentList, UseShellExecute=false, no global yt-dlp config/cookies, finite retries/timeouts and cancellation kills the process tree. YouTube downloads are individual videos after explicit playlist metadata import; per-video remote limits are 30 minutes/250 MB. Cache retagging uses existing MP3 without a second download.
+- Lyrics are LRCLIB best effort sidecars for the app; they are not an in-game lyric overlay. Instrumental/not-found/failure are explicit states and do not discard a valid MP3.
+- Spotify public embed imports only visible titles/artists/durations and always reports unconfirmed completeness. It never downloads Spotify preview audio. Official bearer tokens are memory-only and access depends on Spotify permissions. CSV/text are complete only for the supplied rows without skipped/invalid rows.
+- Install staging is a sibling of the selected music root on the same destination volume; backups are outside the scanned music root. Takedawn must be closed for installation/configuration. ConfigureTakedawn writes only audio.custom_music_dir, not newer autostart/soundtrack keys unsupported by installed v0.2.0.
+- Delete playlist/track changes the catalog and does not delete user originals. Reinstall reconciles removed track IDs against the installation manifest; it does not remove files without verified managed ownership. Existing installed directory names remain stable when a library playlist is renamed. No stock soundtrack/game save is edited.
+- A valid external tool/YouTube source can become unavailable; failures remain explicit. MP3 selection is a best-match suggestion and metadata can be reviewed/changed before processing.
+
+Final native playback compatibility adjustment requested after principal CUA evidence: new non-MP3 conversions use libmp3lame 192 kbps CBR (-b:a 192k), replacing VBR -q:a 2 because Windows MCI reported an approximate VBR duration. Existing MP3 sources/cache retags retain stream-copy behaviour. A dedicated argument assertion was added; the final suite passed 50 checks. This fake-process assertion does not itself prove native playback timing; that real acceptance check remains with the principal.
+Exclusive active-playlist extension — 2026-11-11
+Final command: dotnet run --project Tests/Burnout3.PlaylistStudio.Tests.csproj -c Release --no-restore
+Result: SUCCESS 65 synthetic checks; Core Release compilation zero warnings/errors. All configuration and audio fixtures were under the test executable's generated data/ directory; no real Takedawn config or user music was changed.
+
+New API: DetectTakedawn(executablePath?), ActivatePlaylistAsync(playlistId,configPath?,version?,cancellationToken,executablePath?), GetActiveStatus(configPath?). The optional executable path preserves conservative unknown-version behaviour for a user-located custom executable rather than silently falling back to another installed copy.
+
+Activation requires a nonempty playlist and every current track downloaded, present and free of pending metadata changes. It exports a fresh flat isolated snapshot containing only the selected MP3s/sidecars, verifies exact IDs/order/count/hashes and rejects unexpected supported audio. Identical existing snapshots are reused when playlist name, order and source hashes are unchanged and the export is still clean. Contaminated/changed old snapshots are retained, never purged or used as active; a new clean snapshot is made. The ordinary library export root preference remains unchanged.
+
+Version <=0.2.0 or unknown: writes only custom_music_dir to the selected isolated folder and returns explicit EA GAMES TRAX X/A manual-selection instructions. It does not claim current playback or automatic activation. Known version >=0.2.1: one backed-up atomic TOML write additionally sets custom_music_at_start=true and custom_music_soundtrack to the actual ASCII folder name, at most31 display characters, as a string (not an index). This configures selection at the next race; it does not force a user's current in-game selection continuously.
+
+Active status reads the saved selected version, verifies configured directory/autostart/textual name, detects changed or duplicate audio config sections, dropped extra audio, changed hashes, missing tracks, library reorder/removal and pending metadata. It reports configuration/files readiness separately from audible gameplay. ActivePlaylistId is available on LibrarySnapshot.
+
+Transaction failure proof: after a valid reusable activation, the test holds library.json open read-only with FileShare.Read, allowing reads/config write but rejecting the final atomic library replacement. Activation throws; the exact prior TOML bytes are restored only if the config still matches this operation's written hash, and the previous persisted active version/state remains intact. External subsequent config edits are never overwritten by rollback. Reparse-point guards validate the active path from the full DataDirectory boundary.
+
+Added passing cases: old-version/manual config, exact selected flat export, preserved library music root, snapshot reuse, new-version automatic textual settings, ASCII/name length, saved custom version, config rollback on locked library commit, extra-audio detection, fresh isolation without deleting injected user audio, duplicate config detection, reorder stale-state detection, empty/unready activation refusal, and conservative unknown executable detection. No in-game playback was simulated or claimed by these unit/file tests.

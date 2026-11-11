@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWindowsForms>true</UseWindowsForms><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <AssemblyName>BurnoutPlaylistStudio</AssemblyName><Version>1.0.0</Version><Product>Burnout 3 Playlist Studio</Product><Description>Portable playlist studio for Takedawn</Description>
+    <ApplicationIcon>Studio.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Core/Burnout3.PlaylistStudio.Core.csproj" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Studio.ico" LogicalName="Studio.ico" /></ItemGroup>
+</Project>

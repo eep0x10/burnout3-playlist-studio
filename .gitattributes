@@ -1,0 +1,3 @@
+* text=auto eol=lf
+DOTNET-LICENSE.txt -text -whitespace
+DOTNET-ThirdPartyNotices.txt -text -whitespace

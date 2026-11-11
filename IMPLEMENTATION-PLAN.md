@@ -1,0 +1,7 @@
+# Plano e aceitação
+
+Produto: EXE Windowsx64 portable .NET10 nativo, biblioteca e ferramentas ao lado do executável. Interface PT-BR temática corrida/asfalto, playlists sidebar + tabela central + letras inspector + transporte. Alternativas e direção visual mantidas em App/UI-DECISIONS.md pelo owner frontend. Não é web: Anime.js e viewport390px não se aplicam; testar janelasdesktopcompacta/maximizada, foco e async sem travar.
+
+Core: nomes e URLsYouTube, publicSpotifymetadata/CSV/texto, MP3por ferramentas upstream oficiais no primeiro uso, lyricsLRCLIB best-effort comLRC/texto, CRUD/reorder/importlocal/cancelretry, preview; instalação cópia gerenciada por playlist emraizcustommusic e configuraçãoTakedawn validada combackup. SemalterarROMs/saves ou remover arquivos não gerenciados. Spotifylista nunca alegada completa se servidor só disponibiliza parcial. Não bypasslogin/CAPTCHA/DRM. Letras não são overlayno jogo0.2.0.
+
+Verificação: persistênciaJSONatomic/recovery, badinput/URL/path, downloadprocessargs/cancel, manifests/installstaging/safeuninstall/configbackup, providersmocked; teste realcurto deYouTube testclip e MP3, LRCLIBmetadata, Spotifypublicmetadata quando disponível. GUIopera sobre biblioteca de testes identificada, arquivos deáudiooriginaisgerados localmente. Testes nãoinstalamplaylistdeexemplo na biblioteca real do usuário sem necessidade. Entrega.exeZIP+fontes/docs, mostrarcapacidadefuncional e limites de serviços atuais.
