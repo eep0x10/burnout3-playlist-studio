@@ -42,7 +42,7 @@ public sealed class StudioForm : Form
     public StudioForm(string? dataDirectory, string? configurationPath = null)
     {
         SuspendLayout(); AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96, 96); Font = new Font("Segoe UI", 10); Text = "Burnout 3 Playlist Studio"; ClientSize = new Size(1240, 800); MinimumSize = new Size(1080, 680); StartPosition = FormStartPosition.CenterScreen;
-        service = new PlaylistService(dataDirectory); gameConfigurationPath = configurationPath;
+        service = new PlaylistService(dataDirectory); gameConfigurationPath = Path.GetFullPath(configurationPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Takedawn", "settings.toml"));
         uiSettingsPath = Path.Combine(Path.GetFullPath(dataDirectory ?? Path.Combine(AppContext.BaseDirectory, "data")), "ui-settings.json");
         try { if (File.Exists(uiSettingsPath)) takedawnExecutable = JsonSerializer.Deserialize<UiSettings>(File.ReadAllText(uiSettingsPath))?.TakedawnExecutable; } catch { }
         using (var stream = typeof(StudioForm).Assembly.GetManifestResourceStream("Studio.ico")) if (stream is not null) { using var source = new Icon(stream); studioIcon = (Icon)source.Clone(); Icon = studioIcon; }
@@ -209,9 +209,10 @@ public sealed class StudioForm : Form
     }
     private async Task LocateTakedawn()
     {
-        using var dialog = new OpenFileDialog { Title = "Localizar Takedawn.exe — apenas identificar versão", Filter = "Takedawn.exe|Takedawn.exe|Executáveis|*.exe", CheckFileExists = true };
+        using var dialog = new OpenFileDialog { Title = "Localizar Takedawn.exe — apenas identificar versão", Filter = "Executável do jogo|Takedawn.exe", CheckFileExists = true };
         if (takedawnExecutable is string current && File.Exists(current)) dialog.InitialDirectory = Path.GetDirectoryName(current);
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        if (!Path.GetFileName(dialog.FileName).Equals("Takedawn.exe", StringComparison.OrdinalIgnoreCase)) { SetStatus("Selecione o Takedawn.exe do jogo, não um instalador ou outro programa."); return; }
         takedawnExecutable = dialog.FileName; await RefreshActivation();
         try { Directory.CreateDirectory(Path.GetDirectoryName(uiSettingsPath)!); File.WriteAllText(uiSettingsPath, JsonSerializer.Serialize(new UiSettings(takedawnExecutable))); SetStatus(compatibility?.Message ?? "Executável selecionado; versão não identificada."); }
         catch (Exception ex) { SetStatus("Executável identificado nesta sessão; não foi possível salvar a preferência local: " + ex.Message); }
