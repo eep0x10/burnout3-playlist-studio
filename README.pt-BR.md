@@ -2,6 +2,8 @@
 
 **Monte sua trilha. Organize sua biblioteca. Leve suas playlists ao Takedawn.**
 
+[![Compilação Windows](https://github.com/eep0x10/burnout3-playlist-studio/actions/workflows/build.yml/badge.svg)](https://github.com/eep0x10/burnout3-playlist-studio/actions/workflows/build.yml)
+
 Gerenciador portable para Windows, com tema escuro inspirado nas pistas de Burnout 3. Organiza faixas, procura versões no YouTube, prepara MP3s, busca letras e exporta playlists para o sistema de músicas customizadas do **Burnout 3 Recomp / Takedawn**.
 
 [English](README.md) · [Baixar para Windows x64](https://github.com/eep0x10/burnout3-playlist-studio/releases/latest)

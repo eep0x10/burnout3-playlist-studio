@@ -2,6 +2,8 @@
 
 **Your music. Your playlist. Your next takedown.**
 
+[![Windows portable build](https://github.com/eep0x10/burnout3-playlist-studio/actions/workflows/build.yml/badge.svg)](https://github.com/eep0x10/burnout3-playlist-studio/actions/workflows/build.yml)
+
 A portable Windows playlist manager for **Burnout 3 Recomp / Takedawn**. Build a library from song names, YouTube links, public Spotify playlist metadata or local audio. Prepare MP3s, find available lyrics, edit tracks, and load one isolated playlist into the game.
 
 [Português brasileiro](README.pt-BR.md) · [Download for Windows x64](https://github.com/eep0x10/burnout3-playlist-studio/releases/latest) · [Report an issue](https://github.com/eep0x10/burnout3-playlist-studio/issues)
