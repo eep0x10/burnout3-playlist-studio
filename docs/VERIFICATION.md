@@ -38,8 +38,13 @@ Os testes sintéticos usam processos e HTTP simulados; não representam download
 O antigo clipe de teste do yt-dlp estava indisponível e produziu erro explícito. O teste alternativo usou **Big Buck Bunny © 2008 Blender Foundation / peach.blender.org**, sob [CC BY 3.0](https://peach.blender.org/about/), obtido no [canal oficial Blender](https://www.youtube.com/watch?v=aqz-KE-bpKQ). Esse áudio não é incluído no pacote.
 
 As capturas usam somente áudio original sintetizado para demonstração. O pacote distribuído começa com biblioteca vazia, sem dados de teste, músicas ou letras de terceiros.
-# 1.1.1 launcher verification
+
+## 1.1.1 launcher verification
 
 The minimized startup was checked with the manager alone: 95 visible-window samples were minimized, no activation was observed, and the detector initialized. Duplicate launches reused the existing data-folder instance. The enable-notification signal persisted the preference in an existing instance without changing its normal/minimized state. Separate data folders remained independent. Test instances were closed afterwards.
 
 The companion launcher was tested using harmless probe executables in folders containing spaces. Manager flags and each process's working directory matched the contract. No Takedawn process was started. Real gameplay and fullscreen notification appearance remain user validation.
+
+## 1.1.2 automatic close verification
+
+Manager-only probes confirmed graceful exit from the minimized state, isolation between data folders, and a close request issued 500 ms before manager startup. With no manager, the close command returned silently after its bounded five-second wait without creating a data directory or opening a window. The close event uses the existing cancellation and notification-cleanup pipeline. No game was opened.

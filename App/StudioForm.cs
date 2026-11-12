@@ -299,6 +299,7 @@ public sealed class StudioForm : Form
         if (!songNoticeEnabled.Checked) songNoticeEnabled.Checked = true;
         else { SaveUiPreferences(); _ = UpdateSongWatcher(); }
     });
+    internal void CloseAfterGameFromLauncher() => DispatchNotification(Close);
     private void ShowNoticeDemonstration()
     {
         if (notificationClosing) return;

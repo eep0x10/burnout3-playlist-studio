@@ -18,6 +18,8 @@ wscript.exe "C:\Games\Playlist Studio\Launch-Takedawn.vbs" "C:\Games\Takedawn\Ta
 
 Keep the script beside `BurnoutPlaylistStudio.exe`. This shortcut starts the manager minimized with song notifications enabled, then starts Takedawn in its own folder. The launcher accepts the game path only; it does not forward extra game arguments. Use folders without percent signs. The manager stays available on the taskbar. An existing manager for the same data folder is reused. Launching the game executable directly bypasses this shortcut; no Windows startup service or game modification is installed.
 
+Since 1.1.2, the launcher waits for the game process it started to exit, then asks the manager to close gracefully. This also applies when the manager was already open. Any active manager operation is cancelled and allowed to finish cleanup before exit; no process is forcibly killed. If you close the manager first, the later close request exits silently. Starting the manager directly keeps it independent of the game's lifetime. Do not terminate the small `wscript.exe` launcher while playing, since it delivers the close request.
+
 For a manager-only shortcut, use `BurnoutPlaylistStudio.exe --minimized --enable-song-notice`. Restore the original game shortcut target to `Takedawn.exe` to undo the integration. Moving the portable manager requires updating the shortcut's script path.
 
 ![Real preview window showing demonstration metadata, outside the game](screenshots/now-playing-preview.png)

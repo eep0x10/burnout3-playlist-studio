@@ -27,7 +27,7 @@ As capturas usam faixas originais sintetizadas para demonstração. A biblioteca
 
 Mantenha o gerenciador aberto e marque **Aviso da música no jogo**. Um popup com título e artista aparece no canto inferior esquerdo quando um MP3 gerenciado é detectado no Takedawn em primeiro plano. Pode minimizar o gerenciador. **Testar aviso** mostra uma prévia identificada como demonstração, sem abrir o jogo.
 
-**Abrir os dois com um clique:** o portable 1.1.1 inclui `Launch-Takedawn.vbs`, que abre o gerenciador minimizado com os avisos ativos e inicia o jogo. [Como configurar o atalho](docs/NOW_PLAYING.md#start-together-with-takedawn-111).
+**Abrir os dois com um clique:** `Launch-Takedawn.vbs` abre o gerenciador minimizado com os avisos ativos e inicia o jogo. Na versão 1.1.2, também fecha o gerenciador ao sair do jogo, aguardando a limpeza de operações em andamento. [Como configurar o atalho](docs/NOW_PLAYING.md#start-together-with-takedawn-111).
 
 É um aviso externo no estilo do jogo, sem alterar o HUD nativo, os saves ou o executável. A detecção consulta apenas os arquivos gerenciados abertos pelo Takedawn, sem capturar memória nem habilitar diagnóstico completo. Pode levar um ou dois segundos e não confirma audibilidade ou pausa. A aparência sobre o jogo em tela cheia ainda depende de teste do usuário. [Detalhes e limites](docs/NOW_PLAYING.md).
 

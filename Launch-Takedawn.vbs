@@ -1,5 +1,5 @@
 Option Explicit
-Dim shell, files, folder, manager, game, gameFolder
+Dim shell, files, folder, manager, game, gameFolder, gameError
 Set shell = CreateObject("WScript.Shell")
 Set files = CreateObject("Scripting.FileSystemObject")
 folder = files.GetParentFolderName(WScript.ScriptFullName)
@@ -21,7 +21,17 @@ shell.CurrentDirectory = folder
 shell.Run Quote(manager) & " --minimized --enable-song-notice", 7, False
 gameFolder = files.GetParentFolderName(game)
 shell.CurrentDirectory = gameFolder
-shell.Run Quote(game), 1, False
+On Error Resume Next
+shell.Run Quote(game), 1, True
+gameError = Err.Description
+Err.Clear
+On Error GoTo 0
+shell.CurrentDirectory = folder
+shell.Run Quote(manager) & " --close-after-game", 7, False
+If Len(gameError) > 0 Then
+    MsgBox "Could not start Takedawn: " & gameError, 48, "Playlist Studio"
+    WScript.Quit 1
+End If
 
 Function Quote(value)
     Quote = Chr(34) & value & Chr(34)
