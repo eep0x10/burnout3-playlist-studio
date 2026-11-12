@@ -5,12 +5,17 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Burnout3.PlaylistStudio.Core;
 
+if(args.Length==2&&args[0]=="--pss-holdfile")
+{
+    using(var fixtureHandle=new FileStream(args[1],FileMode.Open,FileAccess.Read,FileShare.ReadWrite)){Console.WriteLine("READY");Console.Out.Flush();Console.ReadLine();}
+    Console.WriteLine("CLOSED");Console.Out.Flush();Console.ReadLine();return;
+}
 var root=Path.Combine(AppContext.BaseDirectory,"data",Guid.NewGuid().ToString("N"));Directory.CreateDirectory(root);var data=Path.Combine(root,"data");var tools=Path.Combine(root,"tools");Directory.CreateDirectory(tools);
 var runner=new FakeRunner();var handler=new FakeHttp();using var http=new HttpClient(handler);var service=new PlaylistService(data,runner,http,tools);int passed=0;
 void Check(bool value,string message){if(!value)throw new Exception(message);passed++;Console.WriteLine("PASS "+message);}
 void Reject(Action action,string message){bool failed=false;try{action();}catch(Exception ex)when(ex is ArgumentException or IOException or InvalidDataException or InvalidOperationException){failed=true;}Check(failed,message);}
 string Hash(string path)=>Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
-// Only synthetic tools and an injected process runner are used. No executable is run.
+// Download/conversion tools use an injected runner. The PSS test starts only this same test executable.
 foreach(string name in new[]{"yt-dlp.exe","ffmpeg.exe","ffprobe.exe","deno.exe"})File.WriteAllText(Path.Combine(tools,name),"SYNTHETIC TEST STUB");
 Check(!service.GetTools().Ready,"Pre-existing executables without receipts are not trusted");
 var receipts=new Dictionary<string,object>();foreach(string name in new[]{"yt-dlp.exe","ffmpeg.exe","ffprobe.exe","deno.exe"})receipts[name]=new{Source="https://example.invalid/synthetic-test-only",Sha256=Hash(Path.Combine(tools,name)),Version="synthetic"};
@@ -94,6 +99,36 @@ File.WriteAllBytes(activeConfig,validActiveConfig);await service.ActivatePlaylis
 var emptyActive=service.CreatePlaylist("Empty active");bool emptyRefused=false;try{await service.ActivatePlaylistAsync(emptyActive.Id,activeConfig,new Version(0,3,1));}catch(InvalidOperationException){emptyRefused=true;}Check(emptyRefused,"Empty playlist cannot be activated");
 service.AddTrack(emptyActive.Id,"Pending track");string untouchedConfigHash=Hash(activeConfig);bool pendingRefused=false;try{await service.ActivatePlaylistAsync(emptyActive.Id,activeConfig,new Version(0,3,1));}catch(InvalidOperationException){pendingRefused=true;}Check(pendingRefused&&Hash(activeConfig)==untouchedConfigHash,"Unready playlist refuses activation before changing configuration");
 var compatibility=service.DetectTakedawn(Path.Combine(root,"unknown-takedawn.exe"));Check(compatibility.InstalledVersion==null&&!compatibility.AutomaticSupported,"Unknown executable version never claims automatic support");
+string pssFixture=Path.Combine(root,"pss-whitelisted.mp3"),pssUnlisted=Path.Combine(root,"pss-unlisted.mp3");File.WriteAllText(pssFixture,"synthetic");File.WriteAllText(pssUnlisted,"synthetic");
+using(var held=new FileStream(pssFixture,FileMode.Open,FileAccess.Read,FileShare.ReadWrite))
+using(var pssOther=new FileStream(pssUnlisted,FileMode.Open,FileAccess.Read,FileShare.ReadWrite))
+{var pssFound=PssAudioHandles.Read(Environment.ProcessId,new[]{pssFixture});Check(pssFound.Count==1&&pssFound[0]==pssFixture,"PSS own-PID duplicate query resolves only exact whitelisted synthetic file");}
+Check(PssAudioHandles.Read(Environment.ProcessId,new[]{pssFixture}).Count==0,"PSS own-PID no longer observes synthetic file after close");var childInfo=new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=false,RedirectStandardInput=true,RedirectStandardOutput=true};childInfo.ArgumentList.Add("--pss-holdfile");childInfo.ArgumentList.Add(pssFixture);
+using(var syntheticChild=System.Diagnostics.Process.Start(childInfo)!)
+{
+    try
+    {
+        Check(await syntheticChild.StandardOutput.ReadLineAsync()=="READY","Synthetic child holds its test fixture without impersonating game");
+        Check(PssAudioHandles.ReadSyntheticChild(syntheticChild.Id,new[]{pssFixture}).SequenceEqual(new[]{pssFixture}),"Cross-PID PSS duplicate path query succeeds with only 0x440 process rights");
+        syntheticChild.StandardInput.WriteLine();syntheticChild.StandardInput.Flush();Check(await syntheticChild.StandardOutput.ReadLineAsync()=="CLOSED","Synthetic child confirms fixture closed");
+        Check(PssAudioHandles.ReadSyntheticChild(syntheticChild.Id,new[]{pssFixture}).Count==0,"Cross-PID observer stops reporting child file after close");
+        bool otherPidRefused=false;try{PssAudioHandles.Read(syntheticChild.Id,new[]{pssFixture});}catch(InvalidOperationException){otherPidRefused=true;}Check(otherPidRefused,"Production reader refuses synthetic non-Takedawn process");
+    }
+    finally{syntheticChild.StandardInput.WriteLine();syntheticChild.StandardInput.Flush();if(!syntheticChild.WaitForExit(3000))syntheticChild.Kill(true);}
+}var detectorTest=new StableTrackDetector();var observedTime=DateTime.UtcNow;var observedFiles=new[]{(123,pssFixture)};
+Check(detectorTest.Observe(observedFiles,observedTime).Count==0&&detectorTest.Observe(observedFiles,observedTime.AddMilliseconds(500)).Count==0,"Transient scanner handles do not emit");
+Check(detectorTest.Observe(observedFiles,observedTime.AddSeconds(1)).Count==1&&detectorTest.Observe(observedFiles,observedTime.AddSeconds(2)).Count==0,"Stable decoder candidate emits once");
+detectorTest.Observe([],observedTime.AddSeconds(3));detectorTest.Observe(observedFiles,observedTime.AddSeconds(4));Check(detectorTest.Observe(observedFiles,observedTime.AddSeconds(5)).Count==1,"Closed and reopened same file creates a fresh event");
+var ambiguous=new StableTrackDetector();var manyFiles=new[]{(123,pssFixture),(123,pssUnlisted)};ambiguous.Observe(manyFiles,observedTime);Check(ambiguous.Observe(manyFiles,observedTime.AddSeconds(1)).Count==0,"Ambiguous simultaneous open songs do not guess playback order");// Only synthetic logs: never start or inspect the game during tests.
+string logFixture=Path.Combine(root,"now-playing.log");string songPath=Path.Combine(root,"managed-song.mp3");
+File.WriteAllText(logFixture,$"[SOUNDTRACK] song 00000000: {songPath} (44100 Hz, 2 ch)\n");
+var logTail=new NewSongLogTail();Check(logTail.ReadNew(logFixture).Count==0,"Log observer attaches at EOF without stale notifications");
+File.AppendAllText(logFixture,$"[SOUNDTRACK] song 00000001: {songPath} (44100 Hz, 2 ch)\n");Check(logTail.ReadNew(logFixture).SequenceEqual(new[]{songPath}),"Exact new decoder-open event resolves source path");
+Check(logTail.ReadNew(logFixture).Count==0,"Unchanged log does not duplicate notifications");
+File.AppendAllText(logFixture,$"[SOUNDTRACK] song 00000001: {songPath} (44100 Hz, 2 ch)\n");Check(logTail.ReadNew(logFixture).Count==1,"Reopening same song remains a distinct event");
+File.AppendAllText(logFixture,"[SOUNDTRACK] cannot play song 00000000\n[SOUNDTRACK] song XXXXXXXX: fake (44100 Hz, 2 ch)\n");Check(logTail.ReadNew(logFixture).Count==0,"Failed decoder and malformed events never notify");
+File.WriteAllText(logFixture,"rotated\n");Check(logTail.ReadNew(logFixture).Count==0,"Log truncation discards old events");
+File.AppendAllText(logFixture,$"[SOUNDTRACK] song 00000002: {songPath} (48000 Hz, 2 ch)");Check(logTail.ReadNew(logFixture).Count==0,"Partial event waits for complete line");File.AppendAllText(logFixture,"\n");Check(logTail.ReadNew(logFixture).Count==1,"Completed partial line emits once");
 Console.WriteLine($"SUCCESS {passed} synthetic checks. No real music, game configuration, credentials or network were used. Fixtures: {root}");
 
 sealed class FakeRunner:IToolRunner

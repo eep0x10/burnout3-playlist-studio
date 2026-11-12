@@ -1,4 +1,18 @@
-# Verificação da versão 1.0.0
+# Verificação das versões
+
+## 1.1.0 — aviso de faixa customizada
+
+Verificação em 12/11/2026. O jogo não foi aberto para esta implementação.
+
+- **84 checks passaram**, também em execução independente. Incluem as verificações anteriores de biblioteca, download simulado, instalação e ativação, além do novo observador.
+- PSS real em Windows: arquivo sintético mantido aberto pelo processo de teste e por um processo filho próprio foi reconhecido pela whitelist e deixou de ser reconhecido após fechar. O acesso entre processos usa somente `QUERY_INFORMATION | DUP_HANDLE` (`0x440`).
+- O leitor de produção rejeitou o mesmo filho, que não se chama Takedawn. Nenhum fixture foi renomeado para imitar o jogo.
+- Os testes verificam debounce, reabertura, caminho exato e supressão de candidatos simultâneos. O caminho padrão não altera configuração nem habilita diagnóstico do jogo.
+- Revisão independente conferiu limpeza de handles/snapshots e execução em segundo plano. Nenhuma leitura de memória, bytes de música ou posição de arquivo é feita pelo observador.
+- Prévia real do popup capturada fora do jogo: janela visível, alpha 240/255, foco permaneceu no gerenciador, duração observada de aproximadamente seis segundos. A imagem está identificada como demonstração.
+- Detectar um arquivo aberto não comprova audibilidade, pausa ou contexto de corrida. A validação dentro do Takedawn continua com o usuário.
+
+## 1.0.0 — biblioteca e ativação
 
 Verificado em Windows, em 10 e 11/11/2026.
 

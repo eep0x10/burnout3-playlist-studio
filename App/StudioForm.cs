@@ -13,6 +13,15 @@ public sealed class StudioForm : Form
     private TakedawnCompatibility? compatibility;
     private ActivePlaylistStatus? activeStatus;
     private readonly ToolTip tips = new();
+    private readonly CheckBox songNoticeEnabled = new() { Text = "Aviso da música no jogo", AutoSize = true, Checked = true, Font = new Font("Segoe UI", 9) };
+    private readonly Button testNotice = Button("Testar aviso", 115);
+    private readonly Label watcherState = StudioTheme.Caption("Preparando detector…", 9);
+    private readonly SemaphoreSlim watcherGate = new(1, 1);
+    private NowPlayingOverlay? songOverlay;
+    private NowPlayingWatcher? songWatcher;
+    private CancellationTokenSource? watcherCancellation;
+    private Task? watcherRun;
+    private bool notificationClosing, notificationCleanupReady;
     private LibrarySnapshot library = new([], [], "");
     private Guid? selectedPlaylist, selectedTrack, playingTrack, playingPlaylist;
     private readonly ListBox playlists = new() { Dock = DockStyle.Fill, BorderStyle = BorderStyle.None };
@@ -39,17 +48,17 @@ public sealed class StudioForm : Form
     private string[] lastImportFiles = [];
     private readonly Panel tableSurface = new() { Dock = DockStyle.Fill };
 
-    public StudioForm(string? dataDirectory, string? configurationPath = null)
+    public StudioForm(string? dataDirectory, string? configurationPath = null, bool previewToast = false)
     {
         SuspendLayout(); AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96, 96); Font = new Font("Segoe UI", 10); Text = "Burnout 3 Playlist Studio"; ClientSize = new Size(1240, 800); MinimumSize = new Size(1080, 680); StartPosition = FormStartPosition.CenterScreen;
         service = new PlaylistService(dataDirectory); gameConfigurationPath = Path.GetFullPath(configurationPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Takedawn", "settings.toml"));
         uiSettingsPath = Path.Combine(Path.GetFullPath(dataDirectory ?? Path.Combine(AppContext.BaseDirectory, "data")), "ui-settings.json");
-        try { if (File.Exists(uiSettingsPath)) takedawnExecutable = JsonSerializer.Deserialize<UiSettings>(File.ReadAllText(uiSettingsPath))?.TakedawnExecutable; } catch { }
+        try { if (File.Exists(uiSettingsPath)) { var preferences = JsonSerializer.Deserialize<UiSettings>(File.ReadAllText(uiSettingsPath)); takedawnExecutable = preferences?.TakedawnExecutable; songNoticeEnabled.Checked = preferences?.SongNoticeEnabled ?? true; } } catch { }
         using (var stream = typeof(StudioForm).Assembly.GetManifestResourceStream("Studio.ico")) if (stream is not null) { using var source = new Icon(stream); studioIcon = (Icon)source.Clone(); Icon = studioIcon; }
         BuildLayout(); ConfigureGrid(); WireActions(); StudioTheme.Apply(this); BackColor = StudioTheme.Asphalt; import.BackColor = download.BackColor = StudioTheme.Orange; import.ForeColor = download.ForeColor = StudioTheme.Asphalt; play.BackColor = StudioTheme.Orange; play.ForeColor = StudioTheme.Asphalt;
-        Shown += (_, _) => { RefreshLibrary(); timer.Start(); };
-        FormClosing += (_, e) => { if (busy) { e.Cancel = true; closeAfterOperation = true; operation?.Cancel(); SetStatus("Cancelando a operação antes de fechar…"); } };
-        FormClosed += (_, _) => { timer.Stop(); timer.Dispose(); audio.Dispose(); operation?.Dispose(); tips.Dispose(); studioIcon?.Dispose(); };
+        Shown += (_, _) => { RefreshLibrary(); timer.Start(); _ = UpdateSongWatcher(); if (previewToast) BeginInvoke((Action)ShowNoticeDemonstration); };
+        FormClosing += (_, e) => { if (busy) { e.Cancel = true; closeAfterOperation = true; operation?.Cancel(); SetStatus("Cancelando a operação antes de fechar…"); } else if (!notificationCleanupReady) { e.Cancel = true; _ = StopNotificationsAndClose(); } };
+        FormClosed += (_, _) => { timer.Stop(); timer.Dispose(); audio.Dispose(); operation?.Dispose(); songOverlay?.Dispose(); watcherGate.Dispose(); tips.Dispose(); studioIcon?.Dispose(); };
         ResumeLayout(true);
     }
     protected override void OnShown(EventArgs e) { StudioTheme.DarkTitle(this); var area = Screen.FromControl(this).WorkingArea; float factor = DeviceDpi / 96f; Size = new Size(Math.Min((int)(1260 * factor), area.Width), Math.Min((int)(850 * factor), area.Height)); Location = new Point(area.Left + (area.Width - Width) / 2, area.Top + (area.Height - Height) / 2); ApplyDpi(); base.OnShown(e); }
@@ -60,7 +69,9 @@ public sealed class StudioForm : Form
     {
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(20) }; root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 86)); root.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 58)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 100)); Controls.Add(root);
         var header = new Panel { Dock = DockStyle.Fill }; var brand = new Panel { Dock = DockStyle.Left, Width = 275 }; brand.Controls.Add(new Label { Text = "BURNOUT 3", Dock = DockStyle.Fill, Font = new Font("Bahnschrift SemiCondensed", 28, FontStyle.Bold), ForeColor = StudioTheme.White }); brand.Controls.Add(new Label { Text = "PLAYLIST STUDIO  /  CUSTOM TRAX", Tag = "accent", Dock = DockStyle.Bottom, Height = 28, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = StudioTheme.Orange });
-        var headerActions = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, WrapContents = false, Padding = new Padding(0, 15, 0, 0) }; headerActions.Controls.Add(install); headerActions.Controls.Add(import); headerActions.Controls.Add(tools); headerActions.Controls.Add(updateGame); header.Controls.Add(headerActions); header.Controls.Add(brand); header.Controls.Add(new RacingSignature()); root.Controls.Add(header, 0, 0);
+        var headerActions = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 44, FlowDirection = FlowDirection.RightToLeft, WrapContents = false, Padding = new Padding(0, 4, 0, 0) }; headerActions.Controls.Add(install); headerActions.Controls.Add(import); headerActions.Controls.Add(tools); headerActions.Controls.Add(updateGame); header.Controls.Add(headerActions);
+        var noticePreferences = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 32, WrapContents = false }; songNoticeEnabled.Margin = new Padding(4, 5, 8, 2); testNotice.Height = 24; testNotice.Font = new Font("Segoe UI", 9); testNotice.Margin = new Padding(4, 2, 8, 2); watcherState.AutoSize = false; watcherState.Width = 240; watcherState.Height = 24; watcherState.AutoEllipsis = true; watcherState.TextAlign = ContentAlignment.MiddleLeft; noticePreferences.Controls.Add(songNoticeEnabled); noticePreferences.Controls.Add(testNotice); noticePreferences.Controls.Add(watcherState); header.Controls.Add(noticePreferences); header.Controls.Add(brand); header.Controls.Add(new RacingSignature()); root.Controls.Add(header, 0, 0);
+        tips.SetToolTip(songNoticeEnabled, "Requer o gerenciador aberto e o Takedawn em primeiro plano. É uma sobreposição externa; tela cheia exclusiva pode não exibi-la."); tips.SetToolTip(testNotice, "Mostra uma demonstração de 6 segundos, sem abrir nem consultar o jogo. Não ativa outra janela.");
         setup.Text = "MP3 → PLAYLIST\nEA GAMES TRAX"; setup.AutoSize = false; setup.TextAlign = ContentAlignment.MiddleLeft;
         var body = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1 }; body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 190)); body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 290)); root.Controls.Add(body, 0, 1);
         var rail = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 5, Padding = new Padding(0, 0, 14, 0) }; rail.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); rail.RowStyles.Add(new RowStyle(SizeType.Absolute, 30)); rail.RowStyles.Add(new RowStyle(SizeType.Absolute, 42)); rail.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); rail.RowStyles.Add(new RowStyle(SizeType.Absolute, 40)); rail.RowStyles.Add(new RowStyle(SizeType.Absolute, 50)); rail.Controls.Add(StudioTheme.Caption("SUAS PLAYLISTS", 9, true), 0, 0); rail.Controls.Add(create, 0, 1); rail.Controls.Add(playlists, 0, 2); var railActions = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false }; railActions.Controls.Add(rename); railActions.Controls.Add(delete); rail.Controls.Add(railActions, 0, 3); rail.Controls.Add(setup, 0, 4); body.Controls.Add(rail, 0, 0);
@@ -85,6 +96,8 @@ public sealed class StudioForm : Form
     }
     private void WireActions()
     {
+        songNoticeEnabled.CheckedChanged += async (_, _) => { if (!songNoticeEnabled.Checked) songOverlay?.CancelNotification(); SaveUiPreferences(); await UpdateSongWatcher(); };
+        testNotice.Click += (_, _) => ShowNoticeDemonstration();
         playlists.SelectedIndexChanged += (_, _) => { if (filling || playlists.SelectedItem is not PlaylistItem value) return; selectedPlaylist = value.Value.Id; selectedTrack = null; RefreshTracks(); };
         tracks.SelectionChanged += async (_, _) => { if (filling) return; selectedTrack = tracks.SelectedRows.Count > 0 ? tracks.SelectedRows[0].Tag as Guid? : null; await RefreshInspector(); UpdateActions(); };
         tracks.CellDoubleClick += (_, e) => { if (e.RowIndex >= 0) PlaySelected(); }; search.TextChanged += (_, _) => RefreshTracks();
@@ -214,8 +227,7 @@ public sealed class StudioForm : Form
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         if (!Path.GetFileName(dialog.FileName).Equals("Takedawn.exe", StringComparison.OrdinalIgnoreCase)) { SetStatus("Selecione o Takedawn.exe do jogo, não um instalador ou outro programa."); return; }
         takedawnExecutable = dialog.FileName; await RefreshActivation();
-        try { Directory.CreateDirectory(Path.GetDirectoryName(uiSettingsPath)!); File.WriteAllText(uiSettingsPath, JsonSerializer.Serialize(new UiSettings(takedawnExecutable))); SetStatus(compatibility?.Message ?? "Executável selecionado; versão não identificada."); }
-        catch (Exception ex) { SetStatus("Executável identificado nesta sessão; não foi possível salvar a preferência local: " + ex.Message); }
+        if (SaveUiPreferences()) SetStatus(compatibility?.Message ?? "Executável selecionado; versão não identificada.");
     }
     private async Task RefreshActivation()
     {
@@ -272,6 +284,73 @@ public sealed class StudioForm : Form
     private static string Duration(double? seconds) { if (seconds is null || seconds < 0) return "—"; var time = TimeSpan.FromSeconds(seconds.Value); return time.TotalHours >= 1 ? time.ToString(@"h\:mm\:ss") : time.ToString(@"m\:ss"); }
     private static string Status(TrackStatus status) => status switch { TrackStatus.Added => "Na lista", TrackStatus.Resolving => "Buscando versão", TrackStatus.Ready => "Pronta para baixar", TrackStatus.Downloading => "Baixando", TrackStatus.Downloaded => "MP3 disponível", TrackStatus.Failed => "Falhou", TrackStatus.Cancelled => "Cancelada", _ => status.ToString() };
     private static Button Button(string text, int width) => new StudioButton { Text = text, Width = width, Height = 32, Margin = new Padding(3), AutoSize = false };
-    private sealed record UiSettings(string? TakedawnExecutable);
+    private bool SaveUiPreferences()
+    {
+        try { Directory.CreateDirectory(Path.GetDirectoryName(uiSettingsPath)!); File.WriteAllText(uiSettingsPath, JsonSerializer.Serialize(new UiSettings(takedawnExecutable, songNoticeEnabled.Checked))); return true; }
+        catch (Exception ex) { SetStatus("Preferência mantida nesta sessão; não foi possível salvar os ajustes locais: " + ex.Message); return false; }
+    }
+    private void ShowNoticeDemonstration()
+    {
+        if (notificationClosing) return;
+        songOverlay ??= new NowPlayingOverlay(Handle);
+        bool visible = songOverlay.ShowDemonstration();
+        SetStatus(visible ? "DEMONSTRAÇÃO do aviso por 6 segundos. Nenhum jogo foi iniciado; o gerenciador precisa permanecer aberto para os avisos reais." : "Demonstração não exibida: mantenha a janela do gerenciador visível e em primeiro plano e clique em Testar aviso.");
+    }
+    private async Task UpdateSongWatcher()
+    {
+        if (notificationClosing || IsDisposed) return;
+        try { await watcherGate.WaitAsync(); } catch (ObjectDisposedException) { return; }
+        try
+        {
+            if (!songNoticeEnabled.Checked || notificationClosing) { await StopSongWatcher(); if (!IsDisposed) watcherState.Text = "Aviso desativado"; return; }
+            if (songWatcher is not null) return;
+            watcherState.Text = "Preparando detector…";
+            watcherCancellation = new CancellationTokenSource();
+            var watcher = new NowPlayingWatcher(service); songWatcher = watcher;
+            watcher.TrackChanged += OnGameTrackChanged; watcher.StatusChanged += OnWatcherStatusChanged;
+            CancellationToken token = watcherCancellation.Token;
+            watcherRun = Task.Run(async () =>
+            {
+                try { await watcher.StartAsync(token); }
+                catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+                catch (Exception ex) { DispatchNotification(() => { if (ReferenceEquals(songWatcher, watcher)) { watcherState.Text = "Detector indisponível"; tips.SetToolTip(watcherState, ex.Message); } }); }
+            });
+        }
+        catch (Exception ex) { if (!IsDisposed) { watcherState.Text = "Detector indisponível"; tips.SetToolTip(watcherState, ex.Message); } }
+        finally { try { watcherGate.Release(); } catch (ObjectDisposedException) { } }
+    }
+    private async Task StopSongWatcher()
+    {
+        var watcher = songWatcher; songWatcher = null; watcherCancellation?.Cancel();
+        if (watcher is not null) { watcher.TrackChanged -= OnGameTrackChanged; watcher.StatusChanged -= OnWatcherStatusChanged; try { await watcher.DisposeAsync(); } catch (OperationCanceledException) { } }
+        if (watcherRun is not null) { try { await watcherRun; } catch (OperationCanceledException) { } watcherRun = null; }
+        watcherCancellation?.Dispose(); watcherCancellation = null;
+    }
+    private void OnGameTrackChanged(object? sender, TrackNotification notification) => DispatchNotification(() =>
+    {
+        if (!songNoticeEnabled.Checked || !ReferenceEquals(sender, songWatcher)) return;
+        songOverlay ??= new NowPlayingOverlay(Handle);
+        songOverlay.ShowTrack(notification.Title, notification.Artist, notification.ProcessId);
+    });
+    private void OnWatcherStatusChanged(object? sender, WatcherStatus status) => DispatchNotification(() =>
+    {
+        if (!songNoticeEnabled.Checked || !ReferenceEquals(sender, songWatcher)) return;
+        watcherState.Text = status.Available ? "Detecção disponível" : "Detector indisponível"; tips.SetToolTip(watcherState, status.Message);
+    });
+    private void DispatchNotification(Action action)
+    {
+        if (IsDisposed || notificationClosing || !IsHandleCreated) return;
+        try { BeginInvoke((Action)(() => { if (!IsDisposed && !notificationClosing) action(); })); }
+        catch (InvalidOperationException) { }
+    }
+    private async Task StopNotificationsAndClose()
+    {
+        if (notificationClosing) return; notificationClosing = true; songNoticeEnabled.Enabled = testNotice.Enabled = false; songOverlay?.Dispose(); songOverlay = null;
+        await watcherGate.WaitAsync();
+        try { await StopSongWatcher(); }
+        catch (Exception) { /* Notification cleanup must not prevent the manager closing. */ }
+        finally { watcherGate.Release(); notificationCleanupReady = true; if (!IsDisposed && IsHandleCreated) BeginInvoke((Action)Close); }
+    }
+    private sealed record UiSettings(string? TakedawnExecutable, bool SongNoticeEnabled = true);
     private sealed record PlaylistItem(Playlist Value, bool Configured) { public override string ToString() => $"{(Configured ? "● " : "")}{Value.Name}  ·  {Value.Tracks.Count}"; }
 }

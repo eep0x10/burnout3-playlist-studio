@@ -23,6 +23,14 @@ As capturas usam faixas originais sintetizadas para demonstração. A biblioteca
 
 **Só baixar** prepara a biblioteca sem carregar no jogo. **Carregar playlist** ativa faixas já preparadas. Arquivos locais MP3, WAV, FLAC e Ogg também podem ser usados.
 
+## Aviso ao trocar de música
+
+Mantenha o gerenciador aberto e marque **Aviso da música no jogo**. Um popup com título e artista aparece no canto inferior esquerdo quando um MP3 gerenciado é detectado no Takedawn em primeiro plano. Pode minimizar o gerenciador. **Testar aviso** mostra uma prévia identificada como demonstração, sem abrir o jogo.
+
+É um aviso externo no estilo do jogo, sem alterar o HUD nativo, os saves ou o executável. A detecção consulta apenas os arquivos gerenciados abertos pelo Takedawn, sem capturar memória nem habilitar diagnóstico completo. Pode levar um ou dois segundos e não confirma audibilidade ou pausa. A aparência sobre o jogo em tela cheia ainda depende de teste do usuário. [Detalhes e limites](docs/NOW_PLAYING.md).
+
+![Prévia do aviso, com dados de demonstração e fora do jogo](docs/screenshots/now-playing-preview.png)
+
 ## Apenas a playlist escolhida
 
 Carregar cria uma cópia gerenciada isolada, contendo somente os MP3s da playlist selecionada. O jogo aponta diretamente para essa pasta; as outras playlists da biblioteca ficam de fora. Listas vazias ou com faixas ainda não preparadas são recusadas.
