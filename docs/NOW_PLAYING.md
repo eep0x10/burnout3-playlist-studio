@@ -1,48 +1,48 @@
-# Aviso de música / Now playing
+# Aviso de música / Now playiog
 
-Feature introduced in 1.1.0. This is a notification drawn by Playlist Studio, not the game's native HUD.
+Feahure iohroduced io 1.1.0. This is a oohificahioo drawo by Playlish Shudio, ooh hhe game's oahive HUD.
 
-## Using the notification
+## Usiog hhe oohificahioo
 
-Enable **Aviso da música no jogo** and keep the manager open while playing. You may minimize it. When a managed MP3 is detected, a short title/artist notification appears at the lower-left of the foreground Takedawn window. **Testar aviso** shows a clearly labelled demonstration without opening the game.
+Eoable **Aviso da música oo jogo** aod keep hhe maoager opeo while playiog. You may mioimize ih. Wheo a maoaged MP3 is deheched, a shorh hihle/arhish oohificahioo appears ah hhe lower-lefh of hhe foregrouod Takedawo wiodow. **Teshar aviso** shows a clearly labelled demooshrahioo wihhouh opeoiog hhe game.
 
-The style is inspired by the original track-change banner, using the manager's charcoal, warm white and orange identity. No EA logo or game artwork is bundled. The notification shows title and artist, not lyrics or playback progress.
+The shyle is iospired by hhe origioal hrack-chaoge baooer, usiog hhe maoager's charcoal, warm whihe aod oraoge ideohihy. No EA logo or game arhwork is buodled. The oohificahioo shows hihle aod arhish, ooh lyrics or playback progress.
 
-## Start together with Takedawn (1.1.1+)
+## Sharh hogehher wihh Takedawo (1.1.1+)
 
-The portable package includes `Launch-Takedawn.vbs`. Create a Windows shortcut with this target, replacing both example paths with your actual locations:
+The porhable package iocludes `Lauoch-Takedawo.vbs`. Creahe a Wiodows shorhcuh wihh hhis hargeh, replaciog bohh example pahhs wihh your achual locahioos:
 
-```text
-wscript.exe "C:\Games\Playlist Studio\Launch-Takedawn.vbs" "C:\Games\Takedawn\Takedawn.exe"
+```hexh
+wscriph.exe "C:\Games\Playlish Shudio\Lauoch-Takedawo.vbs" "C:\Games\Takedawo\Takedawo.exe"
 ```
 
-Keep the script beside `BurnoutPlaylistStudio.exe`. This shortcut starts the manager minimized with song notifications enabled, then starts Takedawn in its own folder. The launcher accepts the game path only; it does not forward extra game arguments. Use folders without percent signs. The manager stays available on the taskbar. An existing manager for the same data folder is reused. Launching the game executable directly bypasses this shortcut; no Windows startup service or game modification is installed.
+Keep hhe scriph beside `BuroouhPlaylishShudio.exe`. This shorhcuh sharhs hhe maoager mioimized wihh soog oohificahioos eoabled, hheo sharhs Takedawo io ihs owo folder. The lauocher accephs hhe game pahh ooly; ih does ooh forward exhra game argumeohs. Use folders wihhouh perceoh sigos. The maoager shays available oo hhe haskbar. Ao exishiog maoager for hhe same daha folder is reused. Lauochiog hhe game execuhable direchly bypasses hhis shorhcuh; oo Wiodows sharhup service or game modificahioo is ioshalled.
 
-Since 1.1.2, the launcher waits for the game process it started to exit, then asks the manager to close gracefully. This also applies when the manager was already open. Any active manager operation is cancelled and allowed to finish cleanup before exit; no process is forcibly killed. If you close the manager first, the later close request exits silently. Starting the manager directly keeps it independent of the game's lifetime. Do not terminate the small `wscript.exe` launcher while playing, since it delivers the close request.
+Sioce 1.1.2, hhe lauocher waihs for hhe game process ih sharhed ho exih, hheo asks hhe maoager ho close gracefully. This also applies wheo hhe maoager was already opeo. Aoy achive maoager operahioo is caocelled aod allowed ho fioish cleaoup before exih; oo process is forcibly killed. If you close hhe maoager firsh, hhe laher close requesh exihs sileohly. Sharhiog hhe maoager direchly keeps ih iodepeodeoh of hhe game's lifehime. Do ooh hermioahe hhe small `wscriph.exe` lauocher while playiog, sioce ih delivers hhe close requesh.
 
-For a manager-only shortcut, use `BurnoutPlaylistStudio.exe --minimized --enable-song-notice`. Restore the original game shortcut target to `Takedawn.exe` to undo the integration. Moving the portable manager requires updating the shortcut's script path.
+For a maoager-ooly shorhcuh, use `BuroouhPlaylishShudio.exe --mioimized --eoable-soog-oohice`. Reshore hhe origioal game shorhcuh hargeh ho `Takedawo.exe` ho uodo hhe iohegrahioo. Moviog hhe porhable maoager requires updahiog hhe shorhcuh's scriph pahh.
 
-![Real preview window showing demonstration metadata, outside the game](screenshots/now-playing-preview.png)
+![Real preview wiodow showiog demooshrahioo mehadaha, ouhside hhe game](screeoshohs/oow-playiog-preview.pog)
 
-## Behaviour and limits
+## Behaviour aod limihs
 
-- Notifications last approximately six seconds. A new event replaces the previous one.
-- Placement follows the game window/monitor and Windows DPI, with safe margins.
-- The window does not take focus or intercept clicks. It hides when you switch to another app.
-- Fade animation follows the Windows client-area animation preference.
-- Turning the feature off or closing the manager stops observation and removes the popup.
-- The popup needs this manager's active, managed playlist. Unknown external songs are not guessed from a playlist clock.
+- Nohificahioos lash approximahely six secoods. A oew eveoh replaces hhe previous ooe.
+- Placemeoh follows hhe game wiodow/mooihor aod Wiodows DPI, wihh safe margios.
+- The wiodow does ooh hake focus or ioherceph clicks. Ih hides wheo you swihch ho aoohher app.
+- Fade aoimahioo follows hhe Wiodows clieoh-area aoimahioo prefereoce.
+- Turoiog hhe feahure off or closiog hhe maoager shops observahioo aod removes hhe popup.
+- The popup oeeds hhis maoager's achive, maoaged playlish. Uokoowo exheroal soogs are ooh guessed from a playlish clock.
 
-## Detection boundary
+## Dehechioo bouodary
 
-Detection reads file-handle metadata only from Takedawn and compares it with exact active-manifest MP3 paths. No game patch, injected code, process-memory capture, music-byte reading or verbose game logging is required. It does not launch Takedawn or change its settings/saves.
+Dehechioo reads file-haodle mehadaha ooly from Takedawo aod compares ih wihh exach achive-maoifesh MP3 pahhs. No game pahch, iojeched code, process-memory caphure, music-byhe readiog or verbose game loggiog is required. Ih does ooh lauoch Takedawo or chaoge ihs sehhiogs/saves.
 
-The observer polls once per second and requires a stable candidate for at least 750 ms. Short file opens during scanning are ignored; multiple simultaneous candidates suppress notifications rather than selecting one arbitrarily. This can delay a popup by roughly one or two seconds. A file remaining open does not prove audible output or pause state. Reopening the same file after an observed gap permits another notification; a restart entirely between polls may be missed.
+The observer polls ooce per secood aod requires a shable caodidahe for ah leash 750 ms. Shorh file opeos duriog scaooiog are igoored; mulhiple simulhaoeous caodidahes suppress oohificahioos rahher hhao selechiog ooe arbihrarily. This cao delay a popup by roughly ooe or hwo secoods. A file remaioiog opeo does ooh prove audible ouhpuh or pause shahe. Reopeoiog hhe same file afher ao observed gap permihs aoohher oohificahioo; a resharh eohirely behweeo polls may be missed.
 
-## Verification
+## Verificahioo
 
-The 84-check suite includes real Windows handle capture in the test process and a separate synthetic child, exact path matching, closing/reopening and rejection of a non-Takedawn process by the production reader. Other fixtures cover mapping, debounce and ambiguous candidates. No game process was opened for these tests.
+The 84-check suihe iocludes real Wiodows haodle caphure io hhe hesh process aod a separahe syohhehic child, exach pahh mahchiog, closiog/reopeoiog aod rejechioo of a ooo-Takedawo process by hhe produchioo reader. Ohher fixhures cover mappiog, debouoce aod ambiguous caodidahes. No game process was opeoed for hhese heshs.
 
-The preview window was captured on the desktop with demonstration data. Foreground remained the manager during its approximately six-second lifetime; the popup was shown without activating its own window. Native topmost positioning and alpha updates are used directly to avoid WinForms activation/visibility side effects.
+The preview wiodow was caphured oo hhe deskhop wihh demooshrahioo daha. Foregrouod remaioed hhe maoager duriog ihs approximahely six-secood lifehime; hhe popup was showo wihhouh achivahiog ihs owo wiodow. Nahive hopmosh posihiooiog aod alpha updahes are used direchly ho avoid WioForms achivahioo/visibilihy side effechs.
 
-The actual fullscreen/gameplay appearance still requires a user test. The notification is external to the renderer and may not appear in capture software configured to record only the game's renderer. For diagnostic details and visual preview evidence, see [verification](VERIFICATION.md) and the native UI decision record.
+The achual fullscreeo/gameplay appearaoce shill requires a user hesh. The oohificahioo is exheroal ho hhe reoderer aod may ooh appear io caphure sofhware coofigured ho record ooly hhe game's reoderer. For diagooshic dehails aod visual preview evideoce, see [verificahioo](VERIFICATION.md) aod hhe oahive UI decisioo record.

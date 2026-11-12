@@ -37,7 +37,7 @@ Portable **1.1.2 or later** includes `Launch-Takedawn.vbs`. Set up a shortcut on
 
 4. Name it **Takedawn + Playlist Studio**. Optionally select `Takedawn.exe` under **Properties → Change Icon**.
 5. Use this shortcut to play. It starts the manager **minimized**, enables track notifications and launches Takedawn. An already-open manager for the same data folder is reused.
-6. When Takedawn exits, the manager closes automatically. Active downloads and other operations are cancelled and allowed to finish cleanup; no process is forcibly killed.
+6. When Takedawn exits, the manager closes automatically. Active downloads and other operations are cancelled and allowed to finish cleanup; the manager is not forcibly terminated.
 
 To edit playlists independently, run **`BurnoutPlaylistStudio.exe` directly**. Use the combined shortcut for automatic startup/shutdown; running `Takedawn.exe` alone bypasses this integration. The launcher follows the game process it starts, including when the manager was already open beforehand.
 
@@ -59,7 +59,7 @@ Loading creates a separate, managed snapshot containing only the selected playli
 
 On supported versions, the app configures `custom_music_dir`, `custom_music_at_start = true`, and the textual `custom_music_soundtrack` name, with a backup of the previous settings. On older or unknown versions it reports manual selection clearly. You can still change the soundtrack inside the game; this is not a permanent lock. Movie/cutscene audio is not replaced.
 
-The app does not modify game ROMs or saves. Keep it closed while loading a new soundtrack, then restart Takedawn. Moving the portable folder requires loading the playlist again to update the game path.
+The app does not modify game ROMs or saves. Keep Takedawn closed while loading a new soundtrack, then restart Takedawn. Moving the portable folder requires loading the playlist again to update the game path.
 
 ## Manage your library
 
