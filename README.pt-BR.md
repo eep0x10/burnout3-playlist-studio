@@ -1,157 +1,157 @@
-# Burn ut 3 Playlist Studi 
+# Burnout 3 Playlist Studio
 
-**M nte sua trilha. Organize sua bibli teca. Leve suas playlists a  Takedawn.**
+**Monte sua trilha. Organize sua biblioteca. Leve suas playlists ao Takedawn.**
 
-[![C mpilaçã  Wind ws](https://github.c m/eep0x10/burn ut3-playlist-studi /acti ns/w rkfl ws/build.yml/badge.svg)](https://github.c m/eep0x10/burn ut3-playlist-studi /acti ns/w rkfl ws/build.yml)
+[![Compilação Windows](https://github.com/eep0x10/burnout3-playlist-studio/actions/workflows/build.yml/badge.svg)](https://github.com/eep0x10/burnout3-playlist-studio/actions/workflows/build.yml)
 
-Gerenciad r p rtable para Wind ws, c m tema escur  inspirad  nas pistas de Burn ut 3. Organiza faixas, pr cura versões n  Y uTube, prepara MP3s, busca letras e exp rta playlists para   sistema de músicas cust mizadas d  **Burn ut 3 Rec mp / Takedawn**.
+Gerenciador portable para Windows, com tema escuro inspirado nas pistas de Burnout 3. Organiza faixas, procura versões no YouTube, prepara MP3s, busca letras e exporta playlists para o sistema de músicas customizadas do **Burnout 3 Recomp / Takedawn**.
 
-[English](README.md) · [Baixar para Wind ws x64](https://github.c m/eep0x10/burn ut3-playlist-studi /releases/latest)
+[English](README.md) · [Baixar para Windows x64](https://github.com/eep0x10/burnout3-playlist-studio/releases/latest)
 
-![Bibli teca e player](d cs/screensh ts/library.png)
+![Biblioteca e player](docs/screenshots/library.png)
 
-As capturas usam faixas  riginais sintetizadas para dem nstraçã . A bibli teca d  d wnl ad c meça vazia.
+As capturas usam faixas originais sintetizadas para demonstração. A biblioteca do download começa vazia.
 
-## C meçar
+## Começar
 
-1. Extraia **t da a pasta** d  ZIP em um l cal  nde v cê p ssa gravar arquiv s.
-2. Abra `Burn utPlaylistStudi .exe`. Nã  precisa instalar   .NET.
-3. Crie uma playlist e clique em **Imp rtar**. Adici ne n mes de músicas, links d  Y uTube, uma playlist pública d  Sp tify, arquiv s l cais  u CSV.
-4. C nfira as faixas e feche   Takedawn.
-5. Clique em **Baixar e carregar**. Na primeira utilizaçã ,   aplicativ  baixa e verifica yt-dlp, FFmpeg e Den  nas f ntes  ficiais. Iss  requer internet e espaç  adici nal.
-6. N  **Takedawn 0.2.1  u mais recente**, a playlist fica c nfigurada para seleçã  aut mática na próxima execuçã . N  **0.2.0**, seleci ne-a manualmente em **EA GAMES TRAX → X → A** a cada execuçã .
+1. Extraia **toda a pasta** do ZIP em um local onde você possa gravar arquivos.
+2. Abra `BurnoutPlaylistStudio.exe`. Não precisa instalar o .NET.
+3. Crie uma playlist e clique em **Importar**. Adicione nomes de músicas, links do YouTube, uma playlist pública do Spotify, arquivos locais ou CSV.
+4. Confira as faixas e feche o Takedawn.
+5. Clique em **Baixar e carregar**. Na primeira utilização, o aplicativo baixa e verifica yt-dlp, FFmpeg e Deno nas fontes oficiais. Isso requer internet e espaço adicional.
+6. No **Takedawn 0.2.1 ou mais recente**, a playlist fica configurada para seleção automática na próxima execução. No **0.2.0**, selecione-a manualmente em **EA GAMES TRAX → X → A** a cada execução.
 
-**Só baixar** prepara a bibli teca sem carregar n  j g . **Carregar playlist** ativa faixas já preparadas. Arquiv s l cais MP3, WAV, FLAC e Ogg também p dem ser usad s.
+**Só baixar** prepara a biblioteca sem carregar no jogo. **Carregar playlist** ativa faixas já preparadas. Arquivos locais MP3, WAV, FLAC e Ogg também podem ser usados.
 
-## Abrir e fechar junt  c m   Takedawn
+## Abrir e fechar junto com o Takedawn
 
-O p rtable **1.1.2  u mais recente** inclui `Launch-Takedawn.vbs`. C nfigure um atalh  uma única vez:
+O portable **1.1.2 ou mais recente** inclui `Launch-Takedawn.vbs`. Configure um atalho uma única vez:
 
-1. Extraia   ZIP e mantenha `Launch-Takedawn.vbs` na mesma pasta de `Burn utPlaylistStudi .exe`.
-2. Na Área de Trabalh , clique c m   b tã  direit  → **N v  → Atalh **.
-3. Em **Digite   l cal d  item**, c le   c mand  abaix , tr cand   s d is caminh s pel s l cais d  seu gerenciad r e d  seu `Takedawn.exe`. Preserve as aspas:
+1. Extraia o ZIP e mantenha `Launch-Takedawn.vbs` na mesma pasta de `BurnoutPlaylistStudio.exe`.
+2. Na Área de Trabalho, clique com o botão direito → **Novo → Atalho**.
+3. Em **Digite o local do item**, cole o comando abaixo, trocando os dois caminhos pelos locais do seu gerenciador e do seu `Takedawn.exe`. Preserve as aspas:
 
    ```text
-   %SystemR  t%\System32\wscript.exe "C:\J g s\Playlist Studi \Launch-Takedawn.vbs" "C:\J g s\Takedawn\Takedawn.exe"
+   %SystemRoot%\System32\wscript.exe "C:\Jogos\Playlist Studio\Launch-Takedawn.vbs" "C:\Jogos\Takedawn\Takedawn.exe"
    ```
 
-4. N meie   atalh  c m  **Takedawn + Playlist Studi **. Se desejar, em **Pr priedades → Alterar íc ne**, seleci ne   `Takedawn.exe`.
-5. Use esse atalh  para j gar. Ele abre   gerenciad r **minimizad **, habilita **Avis  da música n  j g ** e inicia   Takedawn. Se   gerenciad r já estiver abert , reutiliza a instância da mesma pasta de dad s.
-6. A  fechar   Takedawn,   gerenciad r fecha aut maticamente. D wnl ads e  utras  perações em andament  sã  cancelad s e aguardam a limpeza antes de sair;   pr cess  nã  é encerrad  à f rça.
+4. Nomeie o atalho como **Takedawn + Playlist Studio**. Se desejar, em **Propriedades → Alterar ícone**, selecione o `Takedawn.exe`.
+5. Use esse atalho para jogar. Ele abre o gerenciador **minimizado**, habilita **Aviso da música no jogo** e inicia o Takedawn. Se o gerenciador já estiver aberto, reutiliza a instância da mesma pasta de dados.
+6. Ao fechar o Takedawn, o gerenciador fecha automaticamente. Downloads e outras operações em andamento são cancelados e aguardam a limpeza antes de sair; o gerenciador não é encerrado à força.
 
-Para editar playlists sem abrir   j g , abra **`Burn utPlaylistStudi .exe` diretamente**. Para j gar c m   cicl  aut mátic  de abertura e fechament , use   atalh  acima; abrir apenas `Takedawn.exe` nã  ativa essa integraçã . O gerenciad r ac mpanha   pr cess  iniciad  pel  atalh , inclusive se já estava abert  antes.
+Para editar playlists sem abrir o jogo, abra **`BurnoutPlaylistStudio.exe` diretamente**. Para jogar com o ciclo automático de abertura e fechamento, use o atalho acima; abrir apenas `Takedawn.exe` não ativa essa integração. O gerenciador acompanha o processo iniciado pelo atalho, inclusive se já estava aberto antes.
 
-Nã  dê dupl  clique n  `.vbs` sem c nfigurar   caminh  d  j g . Use pastas sem `%` n  n me. Se m ver   p rtable  u   j g , atualize   destin  d  atalh . O lançad r usa   Wind ws Script H st (`wscript.exe`); em PCs  nde ele estiver desativad , abra  s d is aplicativ s manualmente. Nada é instalad  na inicializaçã  d  Wind ws. [Detalhes e limites d  avis ](d cs/NOW_PLAYING.md).
+Não dê duplo clique no `.vbs` sem configurar o caminho do jogo. Use pastas sem `%` no nome. Se mover o portable ou o jogo, atualize o destino do atalho. O lançador usa o Windows Script Host (`wscript.exe`); em PCs onde ele estiver desativado, abra os dois aplicativos manualmente. Nada é instalado na inicialização do Windows. [Detalhes e limites do aviso](docs/NOW_PLAYING.md).
 
-## Avis  a  tr car de música
+## Aviso ao trocar de música
 
-Mantenha   gerenciad r abert  e marque **Avis  da música n  j g **. Um p pup c m títul  e artista aparece n  cant  inferi r esquerd  quand  um MP3 gerenciad  é detectad  n  Takedawn em primeir  plan . P de minimizar   gerenciad r. **Testar avis ** m stra uma prévia identificada c m  dem nstraçã , sem abrir   j g .
+Mantenha o gerenciador aberto e marque **Aviso da música no jogo**. Um popup com título e artista aparece no canto inferior esquerdo quando um MP3 gerenciado é detectado no Takedawn em primeiro plano. Pode minimizar o gerenciador. **Testar aviso** mostra uma prévia identificada como demonstração, sem abrir o jogo.
 
-**Abrir  s d is c m um clique:** `Launch-Takedawn.vbs` abre   gerenciad r minimizad  c m  s avis s ativ s e inicia   j g . Na versã  1.1.2, também fecha   gerenciad r a  sair d  j g , aguardand  a limpeza de  perações em andament . [C m  c nfigurar   atalh ](d cs/NOW_PLAYING.md#start-t gether-with-takedawn-111).
+**Abrir os dois com um clique:** `Launch-Takedawn.vbs` abre o gerenciador minimizado com os avisos ativos e inicia o jogo. Na versão 1.1.2, também fecha o gerenciador ao sair do jogo, aguardando a limpeza de operações em andamento. [Como configurar o atalho](docs/NOW_PLAYING.md#start-together-with-takedawn-111).
 
-É um avis  extern  n  estil  d  j g , sem alterar   HUD nativ ,  s saves  u   executável. A detecçã  c nsulta apenas  s arquiv s gerenciad s abert s pel  Takedawn, sem capturar memória nem habilitar diagnóstic  c mplet . P de levar um  u d is segund s e nã  c nfirma audibilidade  u pausa. A aparência s bre   j g  em tela cheia ainda depende de teste d  usuári . [Detalhes e limites](d cs/NOW_PLAYING.md).
+É um aviso externo no estilo do jogo, sem alterar o HUD nativo, os saves ou o executável. A detecção consulta apenas os arquivos gerenciados abertos pelo Takedawn, sem capturar memória nem habilitar diagnóstico completo. Pode levar um ou dois segundos e não confirma audibilidade ou pausa. A aparência sobre o jogo em tela cheia ainda depende de teste do usuário. [Detalhes e limites](docs/NOW_PLAYING.md).
 
-![Prévia d  avis , c m dad s de dem nstraçã  e f ra d  j g ](d cs/screensh ts/n w-playing-preview.png)
+![Prévia do aviso, com dados de demonstração e fora do jogo](docs/screenshots/now-playing-preview.png)
 
-## Apenas a playlist esc lhida
+## Apenas a playlist escolhida
 
-Carregar cria uma cópia gerenciada is lada, c ntend  s mente  s MP3s da playlist seleci nada. O j g  ap nta diretamente para essa pasta; as  utras playlists da bibli teca ficam de f ra. Listas vazias  u c m faixas ainda nã  preparadas sã  recusadas.
+Carregar cria uma cópia gerenciada isolada, contendo somente os MP3s da playlist selecionada. O jogo aponta diretamente para essa pasta; as outras playlists da biblioteca ficam de fora. Listas vazias ou com faixas ainda não preparadas são recusadas.
 
-Em versões c mpatíveis, sã  c nfigurad s `cust m_music_dir`, `cust m_music_at_start = true` e   n me textual de `cust m_music_s undtrack`, c m backup das c nfigurações anteri res. Em versões antigas  u desc nhecidas,   aplicativ  inf rma a seleçã  manual necessária. Iss  nã  impede que v cê tr que a trilha pel  menu d  j g , nem substitui áudi  de filmes/cutscenes.
+Em versões compatíveis, são configurados `custom_music_dir`, `custom_music_at_start = true` e o nome textual de `custom_music_soundtrack`, com backup das configurações anteriores. Em versões antigas ou desconhecidas, o aplicativo informa a seleção manual necessária. Isso não impede que você troque a trilha pelo menu do jogo, nem substitui áudio de filmes/cutscenes.
 
-## Sua bibli teca
+## Sua biblioteca
 
-- Criar, ren mear e rem ver playlists; adici nar e rem ver faixas.
-- Filtrar músicas e alterar a  rdem c m ↑ / ↓.
-- Editar títul , artista e álbum; preparar n vamente   MP3 aplica alterações.
-- Esc lher uma c rresp ndência d  Y uTube quand  a primeira versã  nã  f r a desejada.
-- Ac mpanhar pr cessament , cancelar e tentar n vamente uma faixa que falh u.
-- Ouvir MP3s, pausar, avançar, v ltar, ajustar p siçã  e v lume.
-- C nsultar letras sincr nizadas  u simples quand  disp níveis n  LRCLIB.
+- Criar, renomear e remover playlists; adicionar e remover faixas.
+- Filtrar músicas e alterar a ordem com ↑ / ↓.
+- Editar título, artista e álbum; preparar novamente o MP3 aplica alterações.
+- Escolher uma correspondência do YouTube quando a primeira versão não for a desejada.
+- Acompanhar processamento, cancelar e tentar novamente uma faixa que falhou.
+- Ouvir MP3s, pausar, avançar, voltar, ajustar posição e volume.
+- Consultar letras sincronizadas ou simples quando disponíveis no LRCLIB.
 
-| Adici nar músicas | Editar metadad s |
+| Adicionar músicas | Editar metadados |
 | --- | --- |
-| ![Imp rtar](d cs/screensh ts/imp rt.png) | ![Editar faixa](d cs/screensh ts/edit-track.png) |
+| ![Importar](docs/screenshots/import.png) | ![Editar faixa](docs/screenshots/edit-track.png) |
 
-## Imp rtações
+## Importações
 
-| Entrada | C mp rtament  |
+| Entrada | Comportamento |
 | --- | --- |
-| `Artista - Títul ` | Uma faixa p r linha; busca áudi  n  Y uTube. |
-| Link de víde  d  Y uTube | Usa   víde  inf rmad . |
-| Playlist d  Y uTube | Imp rta entradas disp níveis. |
-| Playlist pública d  Sp tify | Lê n mes e artistas visíveis; busca áudi  n  Y uTube. |
-| CSV / text  | Alternativa para listas indisp níveis pela página pública. |
-| Arquiv s l cais | Prepara uma cópia em MP3; preserva  s  riginais. |
+| `Artista - Título` | Uma faixa por linha; busca áudio no YouTube. |
+| Link de vídeo do YouTube | Usa o vídeo informado. |
+| Playlist do YouTube | Importa entradas disponíveis. |
+| Playlist pública do Spotify | Lê nomes e artistas visíveis; busca áudio no YouTube. |
+| CSV / texto | Alternativa para listas indisponíveis pela página pública. |
+| Arquivos locais | Prepara uma cópia em MP3; preserva os originais. |
 
-O Sp tify **nã  f rnece áudi  a  aplicativ **. A página pública p de  mitir entradas e nã  permite c nfirmar integralidade;   resultad  inf rma quantas faixas f ram enc ntradas. O núcle  também p ssui integraçã  de API  ficial para desenv lved res, sujeita às restrições atuais d  Sp tify; essa  pçã  nã  tem tela de l gin neste aplicativ .
+O Spotify **não fornece áudio ao aplicativo**. A página pública pode omitir entradas e não permite confirmar integralidade; o resultado informa quantas faixas foram encontradas. O núcleo também possui integração de API oficial para desenvolvedores, sujeita às restrições atuais do Spotify; essa opção não tem tela de login neste aplicativo.
 
-CSV aceita vírgula  u p nt  e vírgula, c m cabeçalh s `Title`, `Artist`, `Album` (também rec nhece `Track Name`, `Artist Name(s)` e `Album Name`). Exempl :
+CSV aceita vírgula ou ponto e vírgula, com cabeçalhos `Title`, `Artist`, `Album` (também reconhece `Track Name`, `Artist Name(s)` e `Album Name`). Exemplo:
 
 ```csv
 Title,Artist,Album
 Minha faixa,Meu artista,Minha playlist
 ```
 
-## Integraçã  c m   Takedawn
+## Integração com o Takedawn
 
-F rmat  de músicas cust mizadas d  Takedawn:
+Formato de músicas customizadas do Takedawn:
 
-- Cada subpasta da raiz é um s undtrack; até **100 s undtracks** e **500 músicas p r s undtrack** n  j g .
-- Arquiv s recebem númer s para preservar a  rdem.
-- Títul s n  j g  têm limite de **31 caracteres Latin-1**. A bibli teca mantém  s n mes c mplet s.
-- C nfigurações ficam em `%APPDATA%\Takedawn\settings.t ml`. A seleçã  aut mática exige **0.2.1+**;   aplicativ  detecta a versã  antes de c nfigurar esse recurs .
-- Também é p ssível seleci nar a raiz em **F1 → Audi  → Cust m music f lder**.
+- Cada subpasta da raiz é um soundtrack; até **100 soundtracks** e **500 músicas por soundtrack** no jogo.
+- Arquivos recebem números para preservar a ordem.
+- Títulos no jogo têm limite de **31 caracteres Latin-1**. A biblioteca mantém os nomes completos.
+- Configurações ficam em `%APPDATA%\Takedawn\settings.toml`. A seleção automática exige **0.2.1+**; o aplicativo detecta a versão antes de configurar esse recurso.
+- Também é possível selecionar a raiz em **F1 → Audio → Custom music folder**.
 
-As letras ficam n  gerenciad r e em `.lrc` / `.txt`. **Nã  há integraçã  de letras na tela d  j g .** A versã  0.2.0 exige seleci nar a playlist n  menu a cada execuçã . Música de split screen e  utr s m d s depende das  pções e sup rte d  própri  j g .
+As letras ficam no gerenciador e em `.lrc` / `.txt`. **Não há integração de letras na tela do jogo.** A versão 0.2.0 exige selecionar a playlist no menu a cada execução. Música de split screen e outros modos depende das opções e suporte do próprio jogo.
 
-A sincr nizaçã  identifica seus arquiv s p r manifest  e hash, preservand  arquiv s desc nhecid s  u m dificad s manualmente. Backups ficam em `PlaylistStudi -Backups`, a  lad  da raiz de músicas. ROMs e saves nã  sã  alterad s.
+A sincronização identifica seus arquivos por manifesto e hash, preservando arquivos desconhecidos ou modificados manualmente. Backups ficam em `PlaylistStudio-Backups`, ao lado da raiz de músicas. ROMs e saves não são alterados.
 
-Dep is de rem ver  u editar faixas, use **Carregar playlist** n vamente para atualizar a seleçã . Rem ver uma playlist d  catál g  nã  apaga aut maticamente cópias já exp rtadas  u arquiv s  riginais. Arquiv s de terceir s  u alterad s manualmente c ntinuam preservad s.
+Depois de remover ou editar faixas, use **Carregar playlist** novamente para atualizar a seleção. Remover uma playlist do catálogo não apaga automaticamente cópias já exportadas ou arquivos originais. Arquivos de terceiros ou alterados manualmente continuam preservados.
 
-Referências: [músicas cust mizadas](https://github.c m/xen ph bentx/takedawn/bl b/v0.3.1/d cs/cust m-music.md), [seleçã  na inicializaçã ](https://github.c m/xen ph bentx/takedawn/bl b/v0.3.1/src/game/s undtrack_start.h) e [atualizações  ficiais](https://github.c m/xen ph bentx/takedawn/releases).
+Referências: [músicas customizadas](https://github.com/xenophobentx/takedawn/blob/v0.3.1/docs/custom-music.md), [seleção na inicialização](https://github.com/xenophobentx/takedawn/blob/v0.3.1/src/game/soundtrack_start.h) e [atualizações oficiais](https://github.com/xenophobentx/takedawn/releases).
 
-## P rtable e privacidade
+## Portable e privacidade
 
-M va estas pastas junt  c m   executável:
+Mova estas pastas junto com o executável:
 
 ```text
-Burn utPlaylistStudi .exe
-data/       bibli teca, áudi  preparad , letras e fila
-t  ls/      ferramentas e manifest  de verificaçã 
+BurnoutPlaylistStudio.exe
+data/       biblioteca, áudio preparado, letras e fila
+tools/      ferramentas e manifesto de verificação
 ```
 
-Nã  exige administrad r nem instala dependências gl balmente. O primeir  prepar  inclui d wnl ads grandes, especialmente FFmpeg. Músicas exp rtadas ficam na pasta esc lhida e nã  se m vem junt  c m   EXE.
+Não exige administrador nem instala dependências globalmente. O primeiro preparo inclui downloads grandes, especialmente FFmpeg. Músicas exportadas ficam na pasta escolhida e não se movem junto com o EXE.
 
-Buscas e áudi  acessam Y uTube; letras acessam LRCLIB; imp rtaçã  Sp tify acessa Sp tify; ferramentas vêm de GitHub e Gyan. Nã  há telemetria própria. Use c nteúd  que v cê tenha aut rizaçã  para baixar e utilizar.
+Buscas e áudio acessam YouTube; letras acessam LRCLIB; importação Spotify acessa Spotify; ferramentas vêm de GitHub e Gyan. Não há telemetria própria. Use conteúdo que você tenha autorização para baixar e utilizar.
 
-## Limites e pr blemas c muns
+## Limites e problemas comuns
 
-- **Víde  indisp nível / l gin / bl quei :** esc lha  utra versã   u imp rte arquiv  l cal. O aplicativ  nã  c nt rna DRM, CAPTCHA  u restrições de c nta.
-- **C rresp ndência errada:** use **Esc lher versã ** e c nfira títul , artista e duraçã .
-- **Letra ausente:**   MP3 c ntinua funci nand . Nem t da música p ssui letra  u timestamps n  pr ved r.
-- **Sp tify parcial:** imp rte  s n mes p r CSV/text .
-- **J g  nã  m stra músicas:** c nfira a raiz, seleci ne   s undtrack n  EA GAMES TRAX e reinicie   j g .
-- **Ferramentas nã  preparam:** c nfira internet e permissã  de gravaçã . D wnl ads sã  verificad s antes da execuçã .
-- **Limites p r faixa:** até 30 minut s e apr ximadamente 250 MB p r d wnl ad;   j g  p ssui  s limites acima.
+- **Vídeo indisponível / login / bloqueio:** escolha outra versão ou importe arquivo local. O aplicativo não contorna DRM, CAPTCHA ou restrições de conta.
+- **Correspondência errada:** use **Escolher versão** e confira título, artista e duração.
+- **Letra ausente:** o MP3 continua funcionando. Nem toda música possui letra ou timestamps no provedor.
+- **Spotify parcial:** importe os nomes por CSV/texto.
+- **Jogo não mostra músicas:** confira a raiz, selecione o soundtrack no EA GAMES TRAX e reinicie o jogo.
+- **Ferramentas não preparam:** confira internet e permissão de gravação. Downloads são verificados antes da execução.
+- **Limites por faixa:** até 30 minutos e aproximadamente 250 MB por download; o jogo possui os limites acima.
 
-## Desenv lviment 
+## Desenvolvimento
 
-Requer Wind ws e **.NET SDK 10**:
+Requer Windows e **.NET SDK 10**:
 
-```p wershell
-d tnet run --pr ject Tests/Burn ut3.PlaylistStudi .Tests.cspr j -c Release
+```powershell
+dotnet run --project Tests/Burnout3.PlaylistStudio.Tests.csproj -c Release
 ./build.ps1
 ```
 
-O resultad  self-c ntained `win-x64` fica em `dist/`. `App/` c ntém WinF rms; `C re/` c ntém bibli teca, imp rtações, fila e instalaçã . Os testes usam pastas temp rárias e c nfiguraçã  is lada. Para abrir uma bibli teca de teste:
+O resultado self-contained `win-x64` fica em `dist/`. `App/` contém WinForms; `Core/` contém biblioteca, importações, fila e instalação. Os testes usam pastas temporárias e configuração isolada. Para abrir uma biblioteca de teste:
 
-```p wershell
-./dist/Burn utPlaylistStudi .exe --data C:/Dem /Studi /data --c nfig C:/Dem /Studi /settings.t ml
+```powershell
+./dist/BurnoutPlaylistStudio.exe --data C:/Demo/Studio/data --config C:/Demo/Studio/settings.toml
 ```
 
-C nfigure a pasta de músicas separadamente nessa bibli teca de teste.
+Configure a pasta de músicas separadamente nessa biblioteca de teste.
 
 ## Licença
 
-Aplicativ  s b [MIT](LICENSE). Veja [avis s de terceir s](THIRD_PARTY_NOTICES.md). Pr jet  independente, sem afiliaçã  à EA, Criteri n, Sp tify, Y uTube  u equipe d  Takedawn. Nã  inclui j g , ROM, músicas c merciais  u letras de terceir s.
+Aplicativo sob [MIT](LICENSE). Veja [avisos de terceiros](THIRD_PARTY_NOTICES.md). Projeto independente, sem afiliação à EA, Criterion, Spotify, YouTube ou equipe do Takedawn. Não inclui jogo, ROM, músicas comerciais ou letras de terceiros.
