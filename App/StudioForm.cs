@@ -22,6 +22,7 @@ public sealed class StudioForm : Form
     private CancellationTokenSource? watcherCancellation;
     private Task? watcherRun;
     private bool notificationClosing, notificationCleanupReady;
+    private bool silentStartup;
     private LibrarySnapshot library = new([], [], "");
     private Guid? selectedPlaylist, selectedTrack, playingTrack, playingPlaylist;
     private readonly ListBox playlists = new() { Dock = DockStyle.Fill, BorderStyle = BorderStyle.None };
@@ -48,20 +49,24 @@ public sealed class StudioForm : Form
     private string[] lastImportFiles = [];
     private readonly Panel tableSurface = new() { Dock = DockStyle.Fill };
 
-    public StudioForm(string? dataDirectory, string? configurationPath = null, bool previewToast = false)
+    public StudioForm(string? dataDirectory, string? configurationPath = null, bool previewToast = false, bool startMinimized = false, bool enableSongNotice = false)
     {
+        silentStartup = startMinimized;
         SuspendLayout(); AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96, 96); Font = new Font("Segoe UI", 10); Text = "Burnout 3 Playlist Studio"; ClientSize = new Size(1240, 800); MinimumSize = new Size(1080, 680); StartPosition = FormStartPosition.CenterScreen;
         service = new PlaylistService(dataDirectory); gameConfigurationPath = Path.GetFullPath(configurationPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Takedawn", "settings.toml"));
         uiSettingsPath = Path.Combine(Path.GetFullPath(dataDirectory ?? Path.Combine(AppContext.BaseDirectory, "data")), "ui-settings.json");
         try { if (File.Exists(uiSettingsPath)) { var preferences = JsonSerializer.Deserialize<UiSettings>(File.ReadAllText(uiSettingsPath)); takedawnExecutable = preferences?.TakedawnExecutable; songNoticeEnabled.Checked = preferences?.SongNoticeEnabled ?? true; } } catch { }
+        if (enableSongNotice) { songNoticeEnabled.Checked = true; SaveUiPreferences(); }
         using (var stream = typeof(StudioForm).Assembly.GetManifestResourceStream("Studio.ico")) if (stream is not null) { using var source = new Icon(stream); studioIcon = (Icon)source.Clone(); Icon = studioIcon; }
         BuildLayout(); ConfigureGrid(); WireActions(); StudioTheme.Apply(this); BackColor = StudioTheme.Asphalt; import.BackColor = download.BackColor = StudioTheme.Orange; import.ForeColor = download.ForeColor = StudioTheme.Asphalt; play.BackColor = StudioTheme.Orange; play.ForeColor = StudioTheme.Asphalt;
         Shown += (_, _) => { RefreshLibrary(); timer.Start(); _ = UpdateSongWatcher(); if (previewToast) BeginInvoke((Action)ShowNoticeDemonstration); };
         FormClosing += (_, e) => { if (busy) { e.Cancel = true; closeAfterOperation = true; operation?.Cancel(); SetStatus("Cancelando a operação antes de fechar…"); } else if (!notificationCleanupReady) { e.Cancel = true; _ = StopNotificationsAndClose(); } };
         FormClosed += (_, _) => { timer.Stop(); timer.Dispose(); audio.Dispose(); operation?.Dispose(); songOverlay?.Dispose(); watcherGate.Dispose(); tips.Dispose(); studioIcon?.Dispose(); };
+        if (startMinimized) WindowState = FormWindowState.Minimized;
         ResumeLayout(true);
     }
-    protected override void OnShown(EventArgs e) { StudioTheme.DarkTitle(this); var area = Screen.FromControl(this).WorkingArea; float factor = DeviceDpi / 96f; Size = new Size(Math.Min((int)(1260 * factor), area.Width), Math.Min((int)(850 * factor), area.Height)); Location = new Point(area.Left + (area.Width - Width) / 2, area.Top + (area.Height - Height) / 2); ApplyDpi(); base.OnShown(e); }
+    protected override bool ShowWithoutActivation => silentStartup;
+    protected override void OnShown(EventArgs e) { StudioTheme.DarkTitle(this); var area = Screen.FromControl(this).WorkingArea; float factor = DeviceDpi / 96f; Size = new Size(Math.Min((int)(1260 * factor), area.Width), Math.Min((int)(850 * factor), area.Height)); Location = new Point(area.Left + (area.Width - Width) / 2, area.Top + (area.Height - Height) / 2); ApplyDpi(); base.OnShown(e); silentStartup = false; }
     protected override void OnDpiChanged(DpiChangedEventArgs e) { base.OnDpiChanged(e); ApplyDpi(); }
     private void ApplyDpi() { int row = (int)(38 * DeviceDpi / 96f); tracks.RowTemplate.Height = row; foreach (DataGridViewRow value in tracks.Rows) value.Height = row; playlists.ItemHeight = (int)(34 * DeviceDpi / 96f); }
 
@@ -289,6 +294,11 @@ public sealed class StudioForm : Form
         try { Directory.CreateDirectory(Path.GetDirectoryName(uiSettingsPath)!); File.WriteAllText(uiSettingsPath, JsonSerializer.Serialize(new UiSettings(takedawnExecutable, songNoticeEnabled.Checked))); return true; }
         catch (Exception ex) { SetStatus("Preferência mantida nesta sessão; não foi possível salvar os ajustes locais: " + ex.Message); return false; }
     }
+    internal void EnableSongNoticeFromLauncher() => DispatchNotification(() =>
+    {
+        if (!songNoticeEnabled.Checked) songNoticeEnabled.Checked = true;
+        else { SaveUiPreferences(); _ = UpdateSongWatcher(); }
+    });
     private void ShowNoticeDemonstration()
     {
         if (notificationClosing) return;

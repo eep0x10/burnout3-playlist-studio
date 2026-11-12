@@ -8,6 +8,18 @@ Enable **Aviso da música no jogo** and keep the manager open while playing. You
 
 The style is inspired by the original track-change banner, using the manager's charcoal, warm white and orange identity. No EA logo or game artwork is bundled. The notification shows title and artist, not lyrics or playback progress.
 
+## Start together with Takedawn (1.1.1+)
+
+The portable package includes `Launch-Takedawn.vbs`. Create a Windows shortcut with this target, replacing both example paths with your actual locations:
+
+```text
+wscript.exe "C:\Games\Playlist Studio\Launch-Takedawn.vbs" "C:\Games\Takedawn\Takedawn.exe"
+```
+
+Keep the script beside `BurnoutPlaylistStudio.exe`. This shortcut starts the manager minimized with song notifications enabled, then starts Takedawn in its own folder. The launcher accepts the game path only; it does not forward extra game arguments. Use folders without percent signs. The manager stays available on the taskbar. An existing manager for the same data folder is reused. Launching the game executable directly bypasses this shortcut; no Windows startup service or game modification is installed.
+
+For a manager-only shortcut, use `BurnoutPlaylistStudio.exe --minimized --enable-song-notice`. Restore the original game shortcut target to `Takedawn.exe` to undo the integration. Moving the portable manager requires updating the shortcut's script path.
+
 ![Real preview window showing demonstration metadata, outside the game](screenshots/now-playing-preview.png)
 
 ## Behaviour and limits

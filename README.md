@@ -27,6 +27,8 @@ The first preparation downloads verified copies of **yt-dlp**, **FFmpeg/ffprobe*
 
 Keep the manager open and enable **Aviso da música no jogo**. A title/artist popup appears at the lower-left when a managed MP3 is detected in the foreground Takedawn window. You can minimize the manager and use **Testar aviso** for a labelled preview without opening the game.
 
+**Start both with one click:** portable 1.1.1 includes `Launch-Takedawn.vbs`, which starts the manager minimized with notifications enabled, then launches the game. [Shortcut setup](docs/NOW_PLAYING.md#start-together-with-takedawn-111).
+
 This is an external, game-style notification, not a patch to the native HUD. It reads only file-handle metadata for managed audio; no game-memory capture or verbose diagnostics are required. Stable file detection can take one or two seconds and cannot confirm audible output or pause. Fullscreen gameplay still requires user validation. [How it works and limits](docs/NOW_PLAYING.md).
 
 ![Track notification preview with demonstration data, outside the game](docs/screenshots/now-playing-preview.png)
