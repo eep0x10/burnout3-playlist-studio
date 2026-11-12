@@ -23,6 +23,14 @@ The interface currently uses Brazilian Portuguese. Screenshots show original syn
 
 The first preparation downloads verified copies of **yt-dlp**, **FFmpeg/ffprobe**, and **Deno** from their upstream sources. These stay in the portable `tools/` folder. Downloads require internet and additional disk space.
 
+## Automatic program updates
+
+In **1.3.0+**, Studio checks this repository's stable GitHub releases, verifies the package and updates when safe to close. **Playlists, music, tools and settings are preserved.** An idle editor can restart; a game-companion session waits for normal shutdown without reopening the manager. Prelaunch music synchronization never installs program updates.
+
+Use **Atualizações** (Updates) in the footer to disable automatic updates, view status or **Verificar e instalar** (Check and install) manually. Offline errors do not block the editor. Program files are backed up and failed replacement attempts are rolled back when possible. [Behaviour and recovery](docs/UPDATES.md).
+
+![Automatic-update preference and manual check, using a demonstration response without network](docs/screenshots/updates.png)
+
 ## From shortcut to race: automatic synchronization
 
 Set up once: import the playlist URL, choose **Usar no jogo** with Takedawn closed, then click **Criar atalho** and select `Takedawn.exe`.

@@ -23,6 +23,14 @@ As capturas usam faixas originais sintetizadas para demonstração. A biblioteca
 
 Arquivos locais MP3, WAV, FLAC e Ogg também podem ser usados; os originais são preservados. Importar outra playlist não troca a trilha ativa sem você escolher **Usar no jogo**.
 
+## Atualizações automáticas do programa
+
+Na **versão 1.3.0+**, o gerenciador consulta novas versões estáveis no GitHub, verifica o pacote e se atualiza quando estiver seguro fechar. **Playlists, músicas, ferramentas e configurações são preservadas.** No editor ocioso, ele pode reiniciar; acompanhando o jogo, aguarda o fechamento normal e não reabre a janela. A sincronização antes da corrida continua sem instalar versões do programa.
+
+Use **Atualizações** no rodapé para desativar o automático, consultar o estado ou **Verificar e instalar** manualmente. Sem internet, o editor continua funcionando. A troca mantém backup dos arquivos do programa e tenta reverter falhas. [Como funciona e recuperação](docs/UPDATES.md).
+
+![Opção de atualizações automáticas e verificação manual, com resposta de demonstração sem rede](docs/screenshots/updates.png)
+
 ## Do atalho à corrida: sincronização automática
 
 Configure uma vez: importe a URL da playlist, escolha **Usar no jogo** com o Takedawn fechado e clique em **Criar atalho** para selecionar o `Takedawn.exe`.

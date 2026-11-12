@@ -32,6 +32,11 @@ jobs:
         run: |
           dotnet run --project AppTests/BurnoutPlaylistStudio.AppTests.csproj -c Release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check portable updater safety
+        shell: pwsh
+        run: |
+          dotnet run --project UpdaterTests/BurnoutPlaylistStudio.UpdaterTests.csproj -c Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Publish Windows portable
         shell: pwsh
         run: ./build.ps1

@@ -46,7 +46,8 @@ using var during = new CancellationTokenSource(); bool interrupted = false;
 try { await PrelaunchSync.PrepareAsync(new Fake { During = during.Cancel }, null, "demo.exe", cancellationToken: during.Token); }
 catch (OperationCanceledException) { interrupted = true; }
 Check(interrupted, "cancel during sync cannot permit launch");
-Console.WriteLine($"{passed} prelaunch checks passed.");
+await UpdateCoordinatorChecks.Run(Check);
+Console.WriteLine($"{passed} app checks passed.");
 
 sealed class Fake : IPrelaunchSyncService
 {

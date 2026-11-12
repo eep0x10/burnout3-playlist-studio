@@ -10,6 +10,12 @@ public sealed class StudioForm : Form
     private readonly PlaylistService service;
     private readonly string? gameConfigurationPath;
     private readonly string uiSettingsPath;
+    private bool automaticUpdates = true, updateHandoff;
+    private readonly bool companionSession;
+    private readonly IPortableUpdateBackend? updateBackend;
+    private UpdateCoordinator? updatesCoordinator;
+    private readonly Button updates = Button("Atualizações", 125);
+    private readonly System.Windows.Forms.Timer updateTimer = new() { Interval = 10000 };
     private readonly Dictionary<Guid, string> spotifyTokens = new();
     private string? takedawnExecutable;
     private TakedawnCompatibility? compatibility;
@@ -54,19 +60,21 @@ public sealed class StudioForm : Form
     private string[] lastImportFiles = [];
     private readonly Panel tableSurface = new() { Dock = DockStyle.Fill };
 
-    public StudioForm(string? dataDirectory, string? configurationPath = null, bool previewToast = false, bool startMinimized = false, bool enableSongNotice = false)
+    public StudioForm(string? dataDirectory, string? configurationPath = null, bool previewToast = false, bool startMinimized = false, bool enableSongNotice = false, IPortableUpdateBackend? updateBackend = null)
     {
         silentStartup = startMinimized;
+        companionSession = startMinimized && enableSongNotice;
+        this.updateBackend = updateBackend;
         SuspendLayout(); AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96, 96); Font = new Font("Segoe UI", 10); Text = "Burnout 3 Playlist Studio"; ClientSize = new Size(1240, 800); MinimumSize = new Size(1080, 680); StartPosition = FormStartPosition.CenterScreen;
         service = new PlaylistService(dataDirectory); gameConfigurationPath = Path.GetFullPath(configurationPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Takedawn", "settings.toml"));
         uiSettingsPath = Path.Combine(Path.GetFullPath(dataDirectory ?? Path.Combine(AppContext.BaseDirectory, "data")), "ui-settings.json");
-        try { if (File.Exists(uiSettingsPath)) { var preferences = JsonSerializer.Deserialize<UiSettings>(File.ReadAllText(uiSettingsPath)); takedawnExecutable = preferences?.TakedawnExecutable; songNoticeEnabled.Checked = preferences?.SongNoticeEnabled ?? true; } } catch { }
+        try { if (File.Exists(uiSettingsPath)) { var preferences = JsonSerializer.Deserialize<UiSettings>(File.ReadAllText(uiSettingsPath)); takedawnExecutable = preferences?.TakedawnExecutable; songNoticeEnabled.Checked = preferences?.SongNoticeEnabled ?? true; automaticUpdates = preferences?.AutomaticUpdates ?? true; } } catch { }
         if (enableSongNotice) { songNoticeEnabled.Checked = true; SaveUiPreferences(); }
         using (var stream = typeof(StudioForm).Assembly.GetManifestResourceStream("Studio.ico")) if (stream is not null) { using var source = new Icon(stream); studioIcon = (Icon)source.Clone(); Icon = studioIcon; }
         BuildLayout(); ConfigureGrid(); WireActions(); StudioTheme.Apply(this); BackColor = StudioTheme.Asphalt; import.BackColor = refreshPlaylist.BackColor = StudioTheme.Orange; import.ForeColor = refreshPlaylist.ForeColor = StudioTheme.Asphalt; play.BackColor = StudioTheme.Orange; play.ForeColor = StudioTheme.Asphalt;
-        Shown += (_, _) => { RefreshLibrary(); timer.Start(); pendingTimer.Start(); _ = UpdateSongWatcher(); if (previewToast) BeginInvoke((Action)ShowNoticeDemonstration); };
+        Shown += (_, _) => { RefreshLibrary(); timer.Start(); pendingTimer.Start(); _ = UpdateSongWatcher(); InitializeUpdates(startMinimized); if (previewToast) BeginInvoke((Action)ShowNoticeDemonstration); };
         FormClosing += (_, e) => { if (busy) { e.Cancel = true; closeAfterOperation = true; operation?.Cancel(); SetStatus("Cancelando a operação antes de fechar…"); } else if (!notificationCleanupReady) { e.Cancel = true; _ = StopNotificationsAndClose(); } };
-        FormClosed += (_, _) => { spotifyTokens.Clear(); pendingTimer.Stop(); pendingTimer.Dispose(); timer.Stop(); timer.Dispose(); audio.Dispose(); operation?.Dispose(); songOverlay?.Dispose(); watcherGate.Dispose(); tips.Dispose(); studioIcon?.Dispose(); };
+        FormClosed += (_, _) => { spotifyTokens.Clear(); updateTimer.Stop(); updateTimer.Dispose(); pendingTimer.Stop(); pendingTimer.Dispose(); timer.Stop(); timer.Dispose(); audio.Dispose(); operation?.Dispose(); songOverlay?.Dispose(); watcherGate.Dispose(); tips.Dispose(); studioIcon?.Dispose(); };
         if (startMinimized) WindowState = FormWindowState.Minimized;
         ResumeLayout(true);
     }
@@ -90,7 +98,7 @@ public sealed class StudioForm : Form
         var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 5, Padding = new Padding(8, 0, 12, 0) }; main.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); main.RowStyles.Add(new RowStyle(SizeType.Absolute, 36)); main.RowStyles.Add(new RowStyle(SizeType.Absolute, 26)); main.RowStyles.Add(new RowStyle(SizeType.Absolute, 40)); main.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); main.RowStyles.Add(new RowStyle(SizeType.Absolute, 42)); main.Controls.Add(playlistTitle, 0, 0); main.Controls.Add(count, 0, 1); main.Controls.Add(search, 0, 2); tableSurface.Controls.Add(tracks); tableSurface.Controls.Add(empty); main.Controls.Add(tableSurface, 0, 3); var tableActions = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false }; tableActions.Controls.Add(up); tableActions.Controls.Add(down); tableActions.Controls.Add(remove); tableActions.Controls.Add(refreshPlaylist); tableActions.Controls.Add(sourceLink); main.Controls.Add(tableActions, 0, 4); body.Controls.Add(main, 1, 0);
         var inspector = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 5, Padding = new Padding(10, 0, 0, 0) }; inspector.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); inspector.RowStyles.Add(new RowStyle(SizeType.Absolute, 28)); inspector.RowStyles.Add(new RowStyle(SizeType.Absolute, 48)); inspector.RowStyles.Add(new RowStyle(SizeType.Absolute, 28)); inspector.RowStyles.Add(new RowStyle(SizeType.Absolute, 42)); inspector.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); inspector.Controls.Add(StudioTheme.Caption("AGORA EM FOCO", 9, true), 0, 0); inspector.Controls.Add(inspectorTitle, 0, 1); inspector.Controls.Add(inspectorArtist, 0, 2); var inspectorActions = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false }; inspectorActions.Controls.Add(edit); inspectorActions.Controls.Add(version); inspector.Controls.Add(inspectorActions, 0, 3);
         var tabs = new StudioTabHost(); var detailsTab = new Panel { Padding = new Padding(4) }; var lyricsTab = new Panel { Padding = new Padding(4) }; detailsTab.Controls.Add(metadata); lyricsTab.Controls.Add(lyrics); tabs.AddPage("Detalhes", detailsTab); tabs.AddPage("Letras", lyricsTab); inspector.Controls.Add(tabs, 0, 4); body.Controls.Add(inspector, 2, 0);
-        var jobs = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 2, Padding = new Padding(0, 9, 0, 5) }; jobs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); jobs.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150)); jobs.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110)); jobs.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); jobs.RowStyles.Add(new RowStyle(SizeType.Absolute, 7)); jobText.AutoSize = false; jobText.AutoEllipsis = true; jobText.TextAlign = ContentAlignment.MiddleLeft; jobs.Controls.Add(jobText, 0, 0); jobs.Controls.Add(folder, 1, 0); jobs.Controls.Add(cancel, 2, 0); jobs.Controls.Add(progress, 0, 1); jobs.SetColumnSpan(progress, 3); root.Controls.Add(jobs, 0, 2);
+        var jobs = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 4, RowCount = 2, Padding = new Padding(0, 9, 0, 5) }; jobs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); jobs.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 135)); jobs.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150)); jobs.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110)); jobs.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); jobs.RowStyles.Add(new RowStyle(SizeType.Absolute, 7)); jobText.AutoSize = false; jobText.AutoEllipsis = true; jobText.TextAlign = ContentAlignment.MiddleLeft; jobs.Controls.Add(jobText, 0, 0); jobs.Controls.Add(updates, 1, 0); jobs.Controls.Add(folder, 2, 0); jobs.Controls.Add(cancel, 3, 0); jobs.Controls.Add(progress, 0, 1); jobs.SetColumnSpan(progress, 4); root.Controls.Add(jobs, 0, 2);
         var transport = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 6, RowCount = 2, Padding = new Padding(0, 12, 0, 0) }; transport.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 50)); transport.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 72)); transport.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 50)); transport.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); transport.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120)); transport.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 125)); transport.RowStyles.Add(new RowStyle(SizeType.Absolute, 32)); transport.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); transport.Controls.Add(nowPlaying, 0, 0); transport.SetColumnSpan(nowPlaying, 4); transport.Controls.Add(clock, 4, 0); transport.Controls.Add(StudioTheme.Caption("VOLUME", 8, true), 5, 0); transport.Controls.Add(previous, 0, 1); transport.Controls.Add(play, 1, 1); transport.Controls.Add(next, 2, 1); transport.Controls.Add(seek, 3, 1); transport.SetColumnSpan(seek, 2); transport.Controls.Add(volume, 5, 1); root.Controls.Add(transport, 0, 3);
     }
     private void ConfigureGrid()
@@ -108,6 +116,8 @@ public sealed class StudioForm : Form
     }
     private void WireActions()
     {
+        updates.Click += (_, _) => { if (updatesCoordinator is null) return; using var dialog = new UpdateSettingsDialog(updatesCoordinator, enabled => { automaticUpdates = enabled; SaveUiPreferences(); }); dialog.ShowDialog(this); };
+        updateTimer.Tick += (_, _) => updatesCoordinator?.TryApply();
         createShortcut.Click += async (_, _) => await CreateTakedawnShortcut();
         songNoticeEnabled.CheckedChanged += async (_, _) => { if (!songNoticeEnabled.Checked) songOverlay?.CancelNotification(); SaveUiPreferences(); await UpdateSongWatcher(); };
         testNotice.Click += (_, _) => ShowNoticeDemonstration();
@@ -178,7 +188,7 @@ public sealed class StudioForm : Form
     private void UpdateActions()
     {
         bool hasPlaylist = CurrentPlaylist is not null, hasTrack = CurrentTrack is not null;
-        create.Enabled = tools.Enabled = updateGame.Enabled = !busy; rename.Enabled = delete.Enabled = import.Enabled = !busy && hasPlaylist;
+        create.Enabled = tools.Enabled = updateGame.Enabled = updates.Enabled = !busy; rename.Enabled = delete.Enabled = import.Enabled = !busy && hasPlaylist;
         refreshPlaylist.Enabled = sourceLink.Enabled = !busy && hasPlaylist;
         install.Enabled = !busy && CurrentPlaylist is { Tracks.Count: > 0 };
         tips.SetToolTip(install, install.Enabled ? "Configura somente esta playlist para a próxima execução do jogo." : "Adicione faixas. A preparação é automática ao usar a playlist no jogo.");
@@ -187,7 +197,7 @@ public sealed class StudioForm : Form
     }
     private async Task Run(string message, Func<CancellationToken, Task> action)
     {
-        if (busy) return; busy = true; operationRevision++; operation = new CancellationTokenSource(); progress.Style = ProgressBarStyle.Marquee; SetStatus(message); UpdateActions();
+        if (busy || updateHandoff) return; busy = true; operationRevision++; operation = new CancellationTokenSource(); progress.Style = ProgressBarStyle.Marquee; SetStatus(message); UpdateActions();
         try { await action(operation.Token); if (jobText.Text == message) SetStatus("Concluído. Alterações salvas na biblioteca."); }
         catch (OperationCanceledException) { SetStatus("Operação cancelada. Os itens já concluídos foram preservados; você pode tentar novamente."); }
         catch (Exception ex) { SetStatus("Não foi possível concluir: " + ex.Message); }
@@ -395,11 +405,54 @@ public sealed class StudioForm : Form
     private static Button Button(string text, int width) => new StudioButton { Text = text, Width = width, Height = 32, Margin = new Padding(3), AutoSize = false };
     private bool SaveUiPreferences()
     {
-        try { Directory.CreateDirectory(Path.GetDirectoryName(uiSettingsPath)!); File.WriteAllText(uiSettingsPath, JsonSerializer.Serialize(new UiSettings(takedawnExecutable, songNoticeEnabled.Checked))); return true; }
+        try { Directory.CreateDirectory(Path.GetDirectoryName(uiSettingsPath)!); File.WriteAllText(uiSettingsPath, JsonSerializer.Serialize(new UiSettings(takedawnExecutable, songNoticeEnabled.Checked, automaticUpdates))); return true; }
         catch (Exception ex) { SetStatus("Preferência mantida nesta sessão; não foi possível salvar os ajustes locais: " + ex.Message); return false; }
+    }
+    private void InitializeUpdates(bool startMinimized)
+    {
+        Version assembly = typeof(StudioForm).Assembly.GetName().Version ?? new Version(1, 0, 0);
+        var current = new Version(assembly.Major, assembly.Minor, Math.Max(0, assembly.Build));
+        var restart = new List<string> { "--data", service.DataDirectory };
+        if (gameConfigurationPath is not null) { restart.Add("--config"); restart.Add(gameConfigurationPath); }
+        if (startMinimized) restart.Add("--minimized");
+        updatesCoordinator = new UpdateCoordinator(current, automaticUpdates, companionSession, restart, CanApplyUpdate, LaunchUpdateHelper, updateBackend);
+        updatesCoordinator.StateChanged += (_, _) => { if (!IsDisposed && !notificationClosing) tips.SetToolTip(updates, updatesCoordinator.Status); };
+        tips.SetToolTip(updates, updatesCoordinator.Status); updateTimer.Start();
+        _ = updatesCoordinator.CheckAsync();
+    }
+    private bool CanApplyUpdate(bool closing)
+    {
+        if (!IsHandleCreated || IsDisposed || updateHandoff || busy || checkingPending || activationVerifying || (!closing && notificationClosing) || ModalWindowOpen || audio.IsPlaying) return false;
+        if (PortableUpdateService.IsGameLaunchPending(AppContext.BaseDirectory)) return false;
+        var processes = Process.GetProcessesByName("Takedawn");
+        try { if (processes.Length > 0) return false; }
+        finally { foreach (var process in processes) process.Dispose(); }
+        foreach (string name in new[] { ".sync.lock", ".worker.lock" })
+        {
+            string path = Path.Combine(service.DataDirectory, name);
+            if (!File.Exists(path)) continue;
+            try { using var gate = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None); }
+            catch (IOException) { return false; }
+            catch (UnauthorizedAccessException) { return false; }
+        }
+        return true;
+    }
+    private void LaunchUpdateHelper(StagedUpdate staged, bool closing)
+    {
+        if (!Path.TrimEndingDirectorySeparator(Path.GetFullPath(staged.ProgramDirectory)).Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(AppContext.BaseDirectory)), StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("A atualização pertence a outra pasta do aplicativo.");
+        if (staged.HelperSha256.Length != 64 || !staged.HelperSha256.All(Uri.IsHexDigit) || staged.ManifestSha256.Length != 64 || !staged.ManifestSha256.All(Uri.IsHexDigit)) throw new InvalidDataException("Identidade da atualização ausente.");
+        using var helperLease = new FileStream(staged.HelperExePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        byte[] actual = System.Security.Cryptography.SHA256.HashData(helperLease);
+        if (!System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(actual, Convert.FromHexString(staged.HelperSha256))) throw new InvalidDataException("O auxiliar de atualização foi alterado. Verifique novamente.");
+        var start = new ProcessStartInfo(staged.HelperExePath) { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, WorkingDirectory = Path.GetDirectoryName(staged.HelperExePath)! };
+        start.ArgumentList.Add("--apply-update"); start.ArgumentList.Add(staged.ManifestPath); start.ArgumentList.Add(staged.ManifestSha256);
+        using var helper = Process.Start(start) ?? throw new IOException("O auxiliar de atualização não pôde ser iniciado.");
+        updateHandoff = true; pendingTimer.Stop(); Enabled = false;
+        if (!closing) BeginInvoke((Action)Close);
     }
     internal void EnableSongNoticeFromLauncher() => DispatchNotification(() =>
     {
+        updatesCoordinator?.EnterCompanionSession();
         if (!busy) RefreshLibrary();
         if (!songNoticeEnabled.Checked) songNoticeEnabled.Checked = true;
         else { SaveUiPreferences(); _ = UpdateSongWatcher(); }
@@ -461,13 +514,14 @@ public sealed class StudioForm : Form
     }
     private async Task StopNotificationsAndClose()
     {
-        if (notificationClosing) return; notificationClosing = true; songNoticeEnabled.Enabled = testNotice.Enabled = false; songOverlay?.Dispose(); songOverlay = null;
+        if (notificationClosing) return; notificationClosing = true; updateTimer.Stop(); songNoticeEnabled.Enabled = testNotice.Enabled = false; songOverlay?.Dispose(); songOverlay = null;
+        if (updatesCoordinator is not null) { await updatesCoordinator.StopAsync(); updatesCoordinator.TryApply(closing: true); await updatesCoordinator.DisposeAsync(); }
         await watcherGate.WaitAsync();
         try { await StopSongWatcher(); }
         catch (Exception) { /* Notification cleanup must not prevent the manager closing. */ }
         finally { watcherGate.Release(); notificationCleanupReady = true; if (!IsDisposed && IsHandleCreated) BeginInvoke((Action)Close); }
     }
-    private sealed record UiSettings(string? TakedawnExecutable, bool SongNoticeEnabled = true);
+    private sealed record UiSettings(string? TakedawnExecutable, bool SongNoticeEnabled = true, bool AutomaticUpdates = true);
     private bool ModalWindowOpen => OwnedForms.Any(form => form.Visible) || (IsHandleCreated && !IsWindowEnabled(Handle));
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

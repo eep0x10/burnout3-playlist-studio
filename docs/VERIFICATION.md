@@ -74,3 +74,11 @@ The integrated script waits for --sync-before-game to finish before starting the
 AppTests contains 15 injected-service checks for the preparation policy (success, active selection, forwarding, game availability, failed/pending/unapplied results, cancellation and exception propagation). No filesystem, network, game or UI is used by that suite. The Windows build workflow runs it separately from Core checks.
 
 CUA exercised only an explicitly labelled demonstration service: progress was legible, Cancel waited for async cleanup and the probe exited2. The screenshot is a demonstration, not a live platform sync. Actual game launch remains user validation; no real game or installed shortcut was executed for this change.
+
+## 1.3.0 portable updater
+
+UpdaterTests passed 67 checks using synthetic HTTP and inert files, covering stable releases/version comparison, checksums, ZIP containment/links/duplicates, helper/manifest pins, version identity, cancellation, parent wait, shared-use gates, locked-file replacement, rollback, modified-file/partial-rollback refusal and user-data sentinels. The copied executable was not executed by that suite.
+
+AppTests passed 34 checks (prelaunch and update coordination/preference compatibility). Independent verification ran 65 updater checks before the final launch-intent delta, 34 final AppTests and six focused checks against the final Core: metadata and staging remain available during launch reservation while application performs zero writes; invalid reservation fails closed, expiration permits sandbox application. These evidence sets overlap and are not summed as distinct product tests.
+
+CUA used a new four-track synthetic library and an injected backend forbidding network/staging/application. Updates button/modal were legible; the automatic preference persisted false-to-true while retaining the existing notification/executable settings. Manual check displayed an explicit demonstration response. The preview closed normally. No installed program, copied helper, real self-update, game process or game settings were exercised in UI tests. Actual Windows replacement/restart through the real helper remains unverified; sandbox filesystem and injected lifecycle tests provide the executed coverage.
