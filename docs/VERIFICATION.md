@@ -39,6 +39,8 @@ O antigo clipe de teste do yt-dlp estava indisponível e produziu erro explícit
 
 As capturas usam somente áudio original sintetizado para demonstração. O pacote distribuído começa com biblioteca vazia, sem dados de teste, músicas ou letras de terceiros.
 
+As capturas distribuídas são atualizadas com a interface atual; os registros por versão abaixo descrevem a validação histórica executada naquela revisão.
+
 ## 1.1.1 launcher verification
 
 The minimized startup was checked with the manager alone: 95 visible-window samples were minimized, no activation was observed, and the detector initialized. Duplicate launches reused the existing data-folder instance. The enable-notification signal persisted the preference in an existing instance without changing its normal/minimized state. Separate data folders remained independent. Test instances were closed afterwards.
@@ -54,3 +56,13 @@ Manager-only probes confirmed graceful exit from the minimized state, isolation 
 The existing native desktop design is retained. **Criar atalho** sits beside notification controls and gives immediate dialog/status feedback; no new motion is introduced. A CUA check confirmed the button is visible, the picker opens at the detected game location, and cancelling preserves the shortcut and preferences. The screenshot uses the original four-track demo library. This WinForms application retains its desktop minimum size rather than providing a mobile layout.
 
 An independent 17-check Windows COM probe created and read shortcuts only in a temporary folder. It verified paths containing spaces, target/arguments/working directory/icon, refusal to overwrite without permission, explicit replacement, and rejection of missing files, invalid names, percent signs and invalid destinations. The GUI defaults replacement confirmation to **No**. No generated shortcut or game was executed.
+
+## 1.2.0 synchronization verification
+
+The Core suite passed 115 synthetic checks: complete/partial reconciliation, duplicate identities, metadata overrides, cached audio reuse, owned cache/lyrics/export removal, local-original preservation, Spotify pagination/snapshot failures, and game-open pending/restart recovery. HTTP and downloader execution were fixtures.
+
+Independent verification ran 109 checks before final cleanup hardening, then seven focused checks against the final Core: live-source preservation, no perpetual pending loop, cleanup after its last reference, external-original preservation, locked-name replacement refusal, verified-handle deletion and modified-file preservation. The full 115-check run belongs to the Core implementer; these are separate evidence sets.
+
+CUA exercised a native sandbox using one original 12-second MP3 and real verified FFmpeg. Import automatically prepared audio; edits automatically retagged it; Source cancellation preserved the link; Usar no jogo activated only the sandbox export/config; deletion removed the managed MP3, preserved the original hash and cleared empty-sandbox custom music settings. Updated screenshots show this demo. No real user library/config or game process was used in UI tests.
+
+Live-provider synchronization and gameplay were not tested. Partial-source and deferred application are covered synthetically; actual in-game selection remains user validation.

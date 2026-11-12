@@ -11,7 +11,7 @@ if(args.Length==2&&args[0]=="--pss-holdfile")
     Console.WriteLine("CLOSED");Console.Out.Flush();Console.ReadLine();return;
 }
 var root=Path.Combine(AppContext.BaseDirectory,"data",Guid.NewGuid().ToString("N"));Directory.CreateDirectory(root);var data=Path.Combine(root,"data");var tools=Path.Combine(root,"tools");Directory.CreateDirectory(tools);
-var runner=new FakeRunner();var handler=new FakeHttp();using var http=new HttpClient(handler);var service=new PlaylistService(data,runner,http,tools);int passed=0;
+var runner=new FakeRunner();var handler=new FakeHttp();using var http=new HttpClient(handler);var service=new PlaylistService(data,runner,http,tools){GameRunningForTests=()=>false};int passed=0;
 void Check(bool value,string message){if(!value)throw new Exception(message);passed++;Console.WriteLine("PASS "+message);}
 void Reject(Action action,string message){bool failed=false;try{action();}catch(Exception ex)when(ex is ArgumentException or IOException or InvalidDataException or InvalidOperationException){failed=true;}Check(failed,message);}
 string Hash(string path)=>Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
@@ -36,7 +36,7 @@ var csv=service.ImportCsv(p.Id,"Track Name,Artist Name(s),Album Name\n\"Song, Pa
 var text=service.ImportText(p.Id,"Artist - One\nArtist - Two\n");Check(text.Added==2&&text.Complete,"Text import adds artist/title rows");
 Reject(()=>service.ImportText(p.Id,new string('A',1_000_001)),"Text import is bounded");
 var spotify=await service.ImportSpotifyAsync(p.Id,"https://open.spotify.com/playlist/UNITTEST");Check(spotify.Added==2&&!spotify.Complete&&spotify.Message.Contains("Integralidade",StringComparison.OrdinalIgnoreCase),"Public Spotify embed imports visible metadata with unknown completeness");
-var oauth=await service.ImportSpotifyAsync(p.Id,"https://open.spotify.com/playlist/OAUTH","TEST_TOKEN_MEMORY_ONLY");Check(oauth.Added==1&&!oauth.Complete&&oauth.Warnings.Any(w=>w.Contains("Paginação")),"Repeated official Spotify pagination cannot claim completeness");
+var oauthPlaylist=service.CreatePlaylist("OAuth import");var oauth=await service.ImportSpotifyAsync(oauthPlaylist.Id,"https://open.spotify.com/playlist/OAUTH","TEST_TOKEN_MEMORY_ONLY");Check(oauth.Added==1&&!oauth.Complete&&oauth.Warnings.Any(w=>w.Contains("Paginação")),"Repeated official Spotify pagination cannot claim completeness");
 Check(!File.ReadAllText(Path.Combine(data,"library.json")).Contains("TEST_TOKEN_MEMORY_ONLY"),"Spotify bearer token is never persisted");
 var found=await service.SearchYouTubeAsync("Unit Artist Synthetic Song");Check(found[0].Title=="Synthetic Song Official Audio","YouTube search ranks a matching official candidate over a cover");
 var query=service.AddTrack(p.Id,"--exec cmd /c echo SHOULD_NOT_EXECUTE");var selected=await service.ResolveTrackAsync(p.Id,query.Id);Check(selected.YouTubeUrl!.StartsWith("https://www.youtube.com/watch"),"Text query resolves to canonical YouTube metadata");
@@ -129,16 +129,18 @@ File.AppendAllText(logFixture,$"[SOUNDTRACK] song 00000001: {songPath} (44100 Hz
 File.AppendAllText(logFixture,"[SOUNDTRACK] cannot play song 00000000\n[SOUNDTRACK] song XXXXXXXX: fake (44100 Hz, 2 ch)\n");Check(logTail.ReadNew(logFixture).Count==0,"Failed decoder and malformed events never notify");
 File.WriteAllText(logFixture,"rotated\n");Check(logTail.ReadNew(logFixture).Count==0,"Log truncation discards old events");
 File.AppendAllText(logFixture,$"[SOUNDTRACK] song 00000002: {songPath} (48000 Hz, 2 ch)");Check(logTail.ReadNew(logFixture).Count==0,"Partial event waits for complete line");File.AppendAllText(logFixture,"\n");Check(logTail.ReadNew(logFixture).Count==1,"Completed partial line emits once");
+passed+=await SyncTests.RunAsync(root,tools);
 Console.WriteLine($"SUCCESS {passed} synthetic checks. No real music, game configuration, credentials or network were used. Fixtures: {root}");
 
 sealed class FakeRunner:IToolRunner
 {
-    public List<(string Exe,List<string> Args)> Calls{get;}=[];public bool FailConvert,WaitForCancel;
+    public List<(string Exe,List<string> Args)> Calls{get;}=[];public bool FailConvert,WaitForCancel;public string? RemotePlaylistJson;
     public async Task<ToolResult> RunAsync(string executable,IReadOnlyList<string> arguments,Action<string>? output=null,CancellationToken cancellationToken=default)
     {
         var args=arguments.ToList();Calls.Add((executable,args));if(WaitForCancel){await Task.Delay(Timeout.Infinite,cancellationToken);}
         if(executable.EndsWith("ffprobe.exe"))return new(0,"12.0","");
         if(executable.EndsWith("ffmpeg.exe")){if(FailConvert)return new(1,"","synthetic conversion failure");Directory.CreateDirectory(Path.GetDirectoryName(args[^1])!);File.WriteAllBytes(args[^1],Encoding.ASCII.GetBytes("SYNTHETIC MP3: "+string.Join("|",args.Where(a=>a.StartsWith("title=")))));return new(0,"","");}
+        if(args.Contains("--dump-single-json")&&args.Contains("--flat-playlist")&&!args.Any(a=>a.StartsWith("ytsearch"))&&RemotePlaylistJson!=null)return new(0,RemotePlaylistJson,"");
         if(args.Contains("--dump-single-json"))
         {if(args.Any(a=>a.StartsWith("ytsearch5:")))return new(0,"{\"entries\":[{\"id\":\"cover\",\"title\":\"Synthetic Song Cover\",\"uploader\":\"Unit Artist\",\"duration\":1},{\"id\":\"unit\",\"title\":\"Synthetic Song Official Audio\",\"artist\":\"Unit Artist\",\"duration\":1}]}","");
             return new(0,"{\"id\":\"unit\",\"title\":\"Synthetic tone\",\"artist\":\"Unit Artist\",\"duration\":1,\"webpage_url\":\"https://www.youtube.com/watch?v=unit\"}","");}
@@ -153,7 +155,7 @@ sealed class FakeHttp:HttpMessageHandler
         string url=request.RequestUri!.ToString(),body;
         if(url.Contains("lrclib")){if(FailLyrics)return Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError));body="{\"plainLyrics\":\"Synthetic test line\",\"syncedLyrics\":\"[00:00.00]Synthetic test line\",\"instrumental\":false}";}
         else if(url.Contains("open.spotify.com/embed"))body="<script id=\"__NEXT_DATA__\">{\"props\":{\"pageProps\":{\"state\":{\"data\":{\"entity\":{\"name\":\"Synthetic playlist\",\"trackList\":[{\"title\":\"Track A\",\"subtitle\":\"Artist A\",\"duration\":1000},{\"title\":\"Track B\",\"subtitle\":\"Artist B\",\"duration\":2000}]}}}}}}</script>";
-        else if(url.Contains("/items"))body="{\"items\":[{\"item\":{\"name\":\"OAuth Synthetic\",\"artists\":[{\"name\":\"Artist\"}]}}],\"next\":\"https://api.spotify.com/v1/playlists/OAUTH/items?limit=50\"}";
+        else if(url.Contains("/items"))body="{\"items\":[{\"item\":{\"name\":\"OAuth Synthetic\",\"uri\":\"spotify:track:oauth\",\"artists\":[{\"name\":\"Artist\"}]}}],\"next\":\"https://api.spotify.com/v1/playlists/OAUTH/items?limit=50\"}";
         else body="{\"name\":\"OAuth Test\"}";
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(body,Encoding.UTF8,"application/json")});
     }

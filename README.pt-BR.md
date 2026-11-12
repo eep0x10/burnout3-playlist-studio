@@ -17,11 +17,22 @@ As capturas usam faixas originais sintetizadas para demonstração. A biblioteca
 1. Extraia **toda a pasta** do ZIP em um local onde você possa gravar arquivos.
 2. Abra `BurnoutPlaylistStudio.exe`. Não precisa instalar o .NET.
 3. Crie uma playlist e clique em **Importar**. Adicione nomes de músicas, links do YouTube, uma playlist pública do Spotify, arquivos locais ou CSV.
-4. Confira as faixas e feche o Takedawn.
-5. Clique em **Baixar e carregar**. Na primeira utilização, o aplicativo baixa e verifica yt-dlp, FFmpeg e Deno nas fontes oficiais. Isso requer internet e espaço adicional.
+4. As faixas são preparadas automaticamente após a importação, com MP3 e letras quando disponíveis. Aguarde o resultado; não há uma etapa separada de baixar.
+5. Com o Takedawn fechado, clique em **Usar no jogo** para escolher a playlist ativa. **Atualizar** consulta a playlist de origem e prepara as mudanças. Na primeira utilização, o aplicativo prepara yt-dlp, FFmpeg e Deno nas fontes oficiais; isso requer internet e espaço adicional.
 6. No **Takedawn 0.2.1 ou mais recente**, a playlist fica configurada para seleção automática na próxima execução. No **0.2.0**, selecione-a manualmente em **EA GAMES TRAX → X → A** a cada execução.
 
-**Só baixar** prepara a biblioteca sem carregar no jogo. **Carregar playlist** ativa faixas já preparadas. Arquivos locais MP3, WAV, FLAC e Ogg também podem ser usados.
+Arquivos locais MP3, WAV, FLAC e Ogg também podem ser usados; os originais são preservados. Importar outra playlist não troca a trilha ativa sem você escolher **Usar no jogo**.
+
+## Sincronizar com YouTube e Spotify
+
+- Importe o **link da playlist**, não apenas os links de vídeos individuais. A origem fica salva na biblioteca.
+- Clique em **Atualizar** depois de editar a lista no YouTube/Spotify. O programa identifica novas faixas, baixa e prepara automaticamente o áudio e as letras disponíveis. Não é necessário clicar em um botão de download.
+- Uma leitura completa da origem também acompanha exclusões e ordem. Leituras parciais ou com erro preservam as faixas ausentes e mostram um aviso, para não apagar músicas por engano.
+- Para uma playlist antiga sem origem salva, use **Fonte…** para vincular a URL uma vez. Músicas adicionadas manualmente continuam independentes da origem.
+- Remover faixas ou playlists limpa as cópias gerenciadas correspondentes. Arquivos locais originais, arquivos desconhecidos e cópias alteradas externamente são preservados; limitações de limpeza são informadas.
+- Com o Takedawn aberto, a atualização da trilha ativa e a limpeza de arquivos usados pelo jogo ficam pendentes. A preparação pode continuar, mas o programa não fecha nem reinicia o jogo por você.
+
+O botão **Atualizar** faz a consulta à plataforma; não há um serviço em segundo plano nem sincronização enquanto o gerenciador estiver fechado. A página pública do Spotify pode ser incompleta, então ela não autoriza excluir faixas ausentes. [Funcionamento, acesso Spotify e limites](docs/SYNC.md).
 
 ## Abrir e fechar junto com o Takedawn
 
@@ -75,7 +86,7 @@ Em versões compatíveis, são configurados `custom_music_dir`, `custom_music_at
 
 - Criar, renomear e remover playlists; adicionar e remover faixas.
 - Filtrar músicas e alterar a ordem com ↑ / ↓.
-- Editar título, artista e álbum; preparar novamente o MP3 aplica alterações.
+- Editar título, artista e álbum; a preparação das alterações ocorre automaticamente.
 - Escolher uma correspondência do YouTube quando a primeira versão não for a desejada.
 - Acompanhar processamento, cancelar e tentar novamente uma faixa que falhou.
 - Ouvir MP3s, pausar, avançar, voltar, ajustar posição e volume.
@@ -96,7 +107,7 @@ Em versões compatíveis, são configurados `custom_music_dir`, `custom_music_at
 | CSV / texto | Alternativa para listas indisponíveis pela página pública. |
 | Arquivos locais | Prepara uma cópia em MP3; preserva os originais. |
 
-O Spotify **não fornece áudio ao aplicativo**. A página pública pode omitir entradas e não permite confirmar integralidade; o resultado informa quantas faixas foram encontradas. O núcleo também possui integração de API oficial para desenvolvedores, sujeita às restrições atuais do Spotify; essa opção não tem tela de login neste aplicativo.
+O Spotify **não fornece áudio ao aplicativo**: nomes e artistas são usados para buscar uma correspondência no YouTube. A página pública pode omitir entradas e não permite confirmar integralidade; o aplicativo informa essa limitação e preserva faixas ausentes. O acesso completo pela API oficial exige autorização compatível; veja [sincronização](docs/SYNC.md).
 
 CSV aceita vírgula ou ponto e vírgula, com cabeçalhos `Title`, `Artist`, `Album` (também reconhece `Track Name`, `Artist Name(s)` e `Album Name`). Exemplo:
 
@@ -119,7 +130,7 @@ As letras ficam no gerenciador e em `.lrc` / `.txt`. **Não há integração de 
 
 A sincronização identifica seus arquivos por manifesto e hash, preservando arquivos desconhecidos ou modificados manualmente. Backups ficam em `PlaylistStudio-Backups`, ao lado da raiz de músicas. ROMs e saves não são alterados.
 
-Depois de remover ou editar faixas, use **Carregar playlist** novamente para atualizar a seleção. Remover uma playlist do catálogo não apaga automaticamente cópias já exportadas ou arquivos originais. Arquivos de terceiros ou alterados manualmente continuam preservados.
+Alterações na playlist ativa geram uma atualização da cópia do jogo quando ele estiver fechado. Exclusões limpam somente arquivos identificados como gerenciados pelo aplicativo; arquivos originais, de terceiros ou alterados manualmente continuam preservados. Trabalho pendente é mantido para nova tentativa.
 
 Referências: [músicas customizadas](https://github.com/xenophobentx/takedawn/blob/v0.3.1/docs/custom-music.md), [seleção na inicialização](https://github.com/xenophobentx/takedawn/blob/v0.3.1/src/game/soundtrack_start.h) e [atualizações oficiais](https://github.com/xenophobentx/takedawn/releases).
 

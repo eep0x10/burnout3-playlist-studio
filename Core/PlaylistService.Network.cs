@@ -156,115 +156,10 @@ public sealed partial class PlaylistService
 
     }
 
-    public async Task<ImportResult> ImportYouTubePlaylistAsync(Guid playlistId,string playlistUrl,CancellationToken cancellationToken=default)
-
-    {
-
-        if(!IsPlaylistUrl(playlistUrl))throw new ArgumentException("Informe uma playlist explícita do YouTube.");
-
-        var result=await Yt(["--dump-single-json","--flat-playlist","--skip-download","--ignore-errors","--playlist-end","500","--",playlistUrl],cancellationToken);
-
-        using var json=JsonDocument.Parse(result.StandardOutput);var warnings=new List<string>();int added=0;
-
-        foreach(var item in json.RootElement.GetProperty("entries").EnumerateArray())
-
-        {
-
-            if(item.ValueKind!=JsonValueKind.Object){warnings.Add("Vídeo privado/indisponível omitido.");continue;}
-
-            var candidate=Candidate(item);if(!IsYouTubeUrl(candidate.Url)){warnings.Add("Entrada sem vídeo acessível omitida.");continue;}
-
-            try{var track=AddTrack(playlistId,candidate.Url,candidate.Artist);UpdateTrack(playlistId,track.Id,candidate.Title,candidate.Artist);SelectCandidate(playlistId,track.Id,candidate);added++;}catch(ArgumentException ex){warnings.Add(ex.Message);break;}
-
-        }
-
-        if(Number(json.RootElement,"playlist_count") is double total&&total>added)warnings.Add($"Importação parcial: {added} de {total:0} entradas anunciadas; limite500 ou entradas indisponíveis.");
-
-        return new(added,warnings.Count==0,Text(json.RootElement,"title"),warnings);
-
-    }
-
-    public async Task<ImportResult> ImportSpotifyAsync(Guid playlistId,string playlistUrl,string?accessToken=null,CancellationToken cancellationToken=default)
-
-    {
-
-        if(!Uri.TryCreate(playlistUrl,UriKind.Absolute,out var uri)||uri.Scheme!="https"||uri.Host!="open.spotify.com")throw new ArgumentException("Informe uma playlist pública open.spotify.com.");
-
-        var match=Regex.Match(uri.AbsolutePath,"/playlist/([A-Za-z0-9]+)");if(!match.Success)throw new ArgumentException("Link Spotify não é uma playlist.");string id=match.Groups[1].Value;
-
-        if(string.IsNullOrWhiteSpace(accessToken))
-        {
-            string? name=null;int visible=0;
-            try
-            {
-                using var request=new HttpRequestMessage(HttpMethod.Get,$"https://open.spotify.com/embed/playlist/{id}");request.Headers.UserAgent.ParseAdd("Burnout3PlaylistStudio/1.0");
-                using var response=await http.SendAsync(request,cancellationToken);response.EnsureSuccessStatusCode();
-                if(response.Content.Headers.ContentLength>4_000_000)throw new IOException("Página Spotify excede limite de metadados.");
-                string html=await response.Content.ReadAsStringAsync(cancellationToken);if(html.Length>4_000_000)throw new IOException("Página Spotify excede limite de metadados.");
-                var script=Regex.Match(html,"<script[^>]*id=[\"']__NEXT_DATA__[\"'][^>]*>(.*?)</script>",RegexOptions.Singleline|RegexOptions.IgnoreCase);
-                if(!script.Success)throw new InvalidDataException("Página pública não forneceu lista visível.");
-                using var embed=JsonDocument.Parse(script.Groups[1].Value);var entity=embed.RootElement.GetProperty("props").GetProperty("pageProps").GetProperty("state").GetProperty("data").GetProperty("entity");
-                name=Text(entity,"name");
-                foreach(var item in entity.GetProperty("trackList").EnumerateArray().Take(500))
-                {
-                    string? title=Text(item,"title");if(string.IsNullOrWhiteSpace(title))continue;
-                    var track=AddTrack(playlistId,title,Text(item,"subtitle"));
-                    double? duration=Number(item,"duration");if(duration!=null)State(d=>{Find(d,playlistId,track.Id).DurationSeconds=duration/1000;return 0;},true);visible++;
-                }
-            }
-            catch(OperationCanceledException){throw;}
-            catch(Exception ex)when(ex is HttpRequestException or JsonException or KeyNotFoundException or InvalidDataException or ArgumentException)
-            {return new(visible,false,name,[$"{visible} faixas visíveis importadas; integralidade não confirmada. Embed indisponível/alterado ou limite atingido. Use CSV/texto ou token oficial com acesso à playlist. Nenhum áudio Spotify é baixado."]);}
-            return new(visible,false,name,[$"{visible} faixas visíveis encontradas; integralidade não confirmada: a página embed pode limitar/omitir entradas e não oferece paginação confiável. Para uma lista conhecida, use CSV/texto ou API oficial autorizada. Áudio será resolvido no YouTube, não no preview Spotify."]);
-        }
-
-        int added=0,skipped=0;var warnings=new List<string>();string? nameResult=null;
-
-        try
-
-        {
-
-            using(var metadata=await GetJson($"https://api.spotify.com/v1/playlists/{id}",cancellationToken,accessToken))nameResult=Text(metadata.RootElement,"name");
-
-            string? next=$"https://api.spotify.com/v1/playlists/{id}/items?limit=50";var visited=new HashSet<string>();
-
-            while(next!=null&&visited.Add(next))
-
-            {
-
-                var endpoint=new Uri(next);if(endpoint.Scheme!="https"||endpoint.Host!="api.spotify.com")throw new InvalidDataException("Paginação Spotify fora da API oficial.");
-
-                using var page=await GetJson(next,cancellationToken,accessToken);
-
-                foreach(var entry in page.RootElement.GetProperty("items").EnumerateArray())
-
-                {
-
-                    JsonElement item;if(!entry.TryGetProperty("item",out item)&&!entry.TryGetProperty("track",out item)||item.ValueKind!=JsonValueKind.Object){skipped++;continue;}
-
-                    string? title=Text(item,"name");if(title==null){skipped++;continue;}
-
-                    string artists=item.TryGetProperty("artists",out var artistList)?string.Join(", ",artistList.EnumerateArray().Select(a=>Text(a,"name")).Where(a=>a!=null)):"";
-
-                    try{var track=AddTrack(playlistId,title,artists);if(item.TryGetProperty("album",out var album))UpdateTrack(playlistId,track.Id,title,artists,Text(album,"name")??"");added++;}catch(ArgumentException ex){warnings.Add(ex.Message);next=null;break;}
-
-                }
-
-                if(warnings.Count>0)break;next=Text(page.RootElement,"next");
-
-            }
-
-            if(next!=null&&visited.Contains(next))warnings.Add("Paginação Spotify repetida/interrompida; integralidade não confirmada.");
-
-            if(skipped>0)warnings.Add($"{skipped} entradas locais/privadas/indisponíveis omitidas.");
-
-        }
-
-        catch(HttpRequestException ex){warnings.Add($"Spotify API recusou ou interrompeu o acesso ({ex.StatusCode}). Em modo de desenvolvimento, acesso pode se limitar a playlists próprias/colaborativas. Use CSV/texto; importação parcial não é uma lista completa.");}
-
-        return new(added,warnings.Count==0,nameResult,warnings);
-
-    }
+    public Task<ImportResult> ImportYouTubePlaylistAsync(Guid playlistId,string playlistUrl,CancellationToken cancellationToken=default)
+        =>ImportRemote(playlistId,playlistUrl,null,cancellationToken);
+    public Task<ImportResult> ImportSpotifyAsync(Guid playlistId,string playlistUrl,string?accessToken=null,CancellationToken cancellationToken=default)
+        =>ImportRemote(playlistId,playlistUrl,accessToken,cancellationToken);
 
     private async Task FetchLyrics(Guid playlistId,Guid trackId,CancellationToken token)
 
@@ -318,6 +213,7 @@ public sealed partial class PlaylistService
 
         catch(Exception ex){State(d=>{var t=Find(d,playlistId,trackId);t.LyricsStatus=LyricsStatus.Failed;t.LyricsError=ex is HttpRequestException h?"LRCLIB indisponível: "+h.StatusCode:ex.Message;return 0;},true);}
 
+        RecordManagedFiles(playlistId,trackId);
         await Task.Delay(350,token);
 
     }

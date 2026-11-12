@@ -18,10 +18,21 @@ The interface currently uses Brazilian Portuguese. Screenshots show original syn
 2. Run `BurnoutPlaylistStudio.exe`. No .NET installation or administrator account is required.
 3. Create a playlist with **Nova playlist**, then use **Importar** to add songs, links, a public Spotify playlist, CSV or local audio.
 4. Check titles and artists. **Escolher versão** lets you select a different YouTube match.
-5. Close Takedawn. Use **Baixar e carregar** to prepare the tracks and activate that playlist, or **Carregar playlist** for tracks already prepared.
+5. Audio and available lyrics are prepared automatically after import. With Takedawn closed, use **Usar no jogo** to choose the active playlist. **Atualizar** refreshes a linked source and prepares its changes; there is no separate download button.
 6. For automatic selection, use **Takedawn 0.2.1 or later**. On **0.2.0**, select the custom soundtrack manually in **EA GAMES TRAX → X → A** each time you launch the game.
 
 The first preparation downloads verified copies of **yt-dlp**, **FFmpeg/ffprobe**, and **Deno** from their upstream sources. These stay in the portable `tools/` folder. Downloads require internet and additional disk space.
+
+## Synchronize YouTube and Spotify playlists
+
+- Import the **playlist URL**, rather than individual video links, to retain its source.
+- After editing it on YouTube/Spotify, click **Atualizar** (Update). New tracks are downloaded and prepared automatically with available lyrics.
+- Complete source responses reconcile removals and order. Partial/error responses preserve missing tracks and show a warning instead of treating them as deleted.
+- Use **Fonte…** (Source) to link an old playlist whose origin was not saved. Manually added tracks remain independent.
+- Removing tracks/playlists cleans up their managed copies; original local imports and unknown/externally modified files are preserved. Cleanup limitations are reported.
+- Changing an active game export or deleting files in use is deferred while Takedawn is open. Importing a different playlist does not silently select it for the game; use **Usar no jogo**.
+
+**Atualizar** queries the platform; there is no background service or synchronization with the manager closed. Public Spotify embeds can be incomplete and do not authorize absence-based deletion. [Source access, Spotify and synchronization limits](docs/SYNC.md).
 
 ## Start and close together with Takedawn
 
@@ -88,11 +99,11 @@ The app does not modify game ROMs or saves. Keep Takedawn closed while loading a
 | --- | --- |
 | ![Import sources](docs/screenshots/import.png) | ![Track metadata editor](docs/screenshots/edit-track.png) |
 
-**Só baixar** prepares audio without loading it into the game. The core also supports managed exports for the traditional multi-soundtrack folder workflow.
+Preparation runs automatically after import and edits. Active soundtrack changes are applied with the game closed. The core also supports managed exports for the traditional multi-soundtrack folder workflow.
 
 ### Spotify and text imports
 
-Spotify supplies names/artists, **not audio**. Public pages may omit tracks; the import reports its count and unconfirmed completeness. No Spotify credentials are required for public-page import. The core also has an authorized API integration for developers, but this GUI has no Spotify login flow.
+Spotify supplies names/artists, **not audio**; audio candidates are resolved on YouTube. Public pages may omit tracks, so the import reports unconfirmed completeness and preserves absent tracks. Full API access requires compatible authorization. See [synchronization](docs/SYNC.md).
 
 Use one `Artist - Title` or YouTube URL per line. CSV accepts commas or semicolons and headers such as `Title`, `Artist`, `Album`, `Track Name`, `Artist Name(s)`, `Album Name`, or `YouTube URL`:
 
@@ -120,7 +131,7 @@ Official references: [custom music](https://github.com/xenophobentx/takedawn/blo
 
 Move the EXE together with `data/` and `tools/`. Prepared audio, lyrics and library state live under `data/`; verified tool receipts live under `tools/`. Installed exports elsewhere do not move automatically.
 
-Settings are backed up before changes. Export reconciliation checks ownership and hashes, preserving unmanaged or manually changed files. Removing a track from the catalog requires synchronization/loading again to update the game. Deleting a catalog playlist does not automatically delete previously exported folders or original files.
+Settings are backed up before changes. Export reconciliation checks ownership and hashes, preserving unmanaged or manually changed files. Removing tracks/playlists cleans their owned managed audio, lyrics and obsolete exports; local originals are preserved. Active soundtrack changes and cleanup are deferred while Takedawn is running, with unfinished work retained for retry.
 
 Network access is limited to requested operations: YouTube for matches/audio, Spotify for playlist metadata, LRCLIB for lyrics, GitHub/Gyan for tool downloads. There is no project-operated telemetry service. Never share your `data/` folder or account tokens in public issues.
 

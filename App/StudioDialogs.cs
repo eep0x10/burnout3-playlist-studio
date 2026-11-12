@@ -34,6 +34,30 @@ internal sealed class MetadataDialog : Form
 }
 
 internal enum ImportMode { Text, YouTube, Spotify, Local, Csv }
+internal sealed class PlaylistSourceDialog : Form
+{
+    private readonly TextBox url = new() { Dock = DockStyle.Fill, AccessibleName = "URL da playlist de origem" };
+    private readonly TextBox token = new() { Dock = DockStyle.Fill, UseSystemPasswordChar = true, AccessibleName = "Token da API Spotify — somente nesta sessão" };
+    internal string SourceUrl => url.Text.Trim();
+    internal string AccessToken => token.Text.Trim();
+    internal PlaylistSourceDialog(string? sourceUrl, string? accessToken)
+    {
+        SuspendLayout(); AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96, 96); Font = new Font("Segoe UI", 10); Text = "Fonte da playlist"; ClientSize = new Size(650, 350); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = MinimizeBox = false;
+        url.Text = sourceUrl ?? ""; token.Text = accessToken ?? "";
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 1, RowCount = 6 };
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        foreach (int height in new[] { 26, 42, 32, 42, 105, 48 }) root.RowStyles.Add(new RowStyle(SizeType.Absolute, height));
+        root.Controls.Add(StudioTheme.Caption("URL do YouTube ou Spotify · deixe vazia para desvincular"), 0, 0); root.Controls.Add(url, 0, 1);
+        root.Controls.Add(StudioTheme.Caption("Token da API Spotify · opcional, somente nesta sessão", 9), 0, 2); root.Controls.Add(token, 0, 3);
+        root.Controls.Add(new Label { Dock = DockStyle.Fill, Text = "Salvar consulta a origem e prepara as faixas automaticamente.\nSpotify público pode ser parcial; nesse caso não remove faixas ausentes. Um token autorizado pode ampliar o acesso. O token não será salvo em arquivo.\nPara remover músicas da origem, edite a playlist no YouTube/Spotify.", AutoSize = false }, 0, 4);
+        var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
+        var save = new StudioButton { Text = "Salvar e atualizar", Width = 160, Height = 34 };
+        var cancel = new StudioButton { Text = "Cancelar", Width = 110, Height = 34, DialogResult = DialogResult.Cancel };
+        actions.Controls.Add(save); actions.Controls.Add(cancel); root.Controls.Add(actions, 0, 5); Controls.Add(root); CancelButton = cancel; AcceptButton = save;
+        save.Click += (_, _) => { DialogResult = DialogResult.OK; Close(); }; Shown += (_, _) => StudioTheme.DarkTitle(this); StudioTheme.Apply(this); ResumeLayout(true);
+    }
+    protected override void Dispose(bool disposing) { if (disposing) token.Clear(); base.Dispose(disposing); }
+}
 internal sealed class ImportDialog : Form
 {
     private readonly StudioTabHost tabs = new();
@@ -48,10 +72,10 @@ internal sealed class ImportDialog : Form
         SuspendLayout(); AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96, 96); Font = new Font("Segoe UI", 10); Text = "Adicionar à playlist"; ClientSize = new Size(720, 540); MinimumSize = new Size(640, 440); StartPosition = FormStartPosition.CenterParent;
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 1, RowCount = 3 }; root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 50)); root.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48)); Controls.Add(root); root.Controls.Add(StudioTheme.Caption("ESCOLHA A FONTE. CONFIRA A VERSÃO. MONTE SUA TRILHA.", 11, true), 0, 0); root.Controls.Add(tabs, 0, 1);
         var textPage = Page("Texto / CSV", "Uma faixa ou URL por linha. Use Artista - Título. CSV pode conter colunas de título e artista."); var csvButton = new StudioButton { Text = "Abrir CSV…", Dock = DockStyle.Bottom, Height = 34 }; textPage.Controls.Add(text); textPage.Controls.Add(csvButton);
-        var ytPage = Page("YouTube", "Cole uma URL de playlist. Apenas os dados da lista são importados; o download ocorre depois, sob sua ação."); ytPage.Controls.Add(youtube);
+        var ytPage = Page("YouTube", "Cole uma URL de playlist. A origem ficará vinculada. As faixas serão preparadas automaticamente; Atualizar consulta novas músicas e remoções."); ytPage.Controls.Add(youtube);
         var spotifyPage = Page("Spotify", "Importação pública best-effort. Spotify pode limitar ou negar acesso. A contagem e as limitações serão mostradas; use CSV ou texto para completar. Nenhuma credencial será armazenada."); spotifyPage.Controls.Add(spotify);
-        var localPage = Page("MP3 locais", "Adicione MP3s à lista sem alterar os originais. A preparação posterior cria as cópias da biblioteca; a prévia pode usar o arquivo original."); var browse = new StudioButton { Text = "Escolher MP3s…", Dock = DockStyle.Bottom, Height = 34 }; localPage.Controls.Add(files); localPage.Controls.Add(browse);
-        var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, Padding = new Padding(0, 8, 0, 0), WrapContents = false }; var okay = new StudioButton { Text = "Importar para a lista", Size = new Size(190, 34) }; var cancel = new StudioButton { Text = "Cancelar", Size = new Size(110, 34), DialogResult = DialogResult.Cancel }; actions.Controls.Add(okay); actions.Controls.Add(cancel); root.Controls.Add(actions, 0, 2); CancelButton = cancel;
+        var localPage = Page("MP3 locais", "Adicione MP3s à lista sem alterar os originais. A preparação automática cria as cópias da biblioteca; seus arquivos originais serão preservados."); var browse = new StudioButton { Text = "Escolher MP3s…", Dock = DockStyle.Bottom, Height = 34 }; localPage.Controls.Add(files); localPage.Controls.Add(browse);
+        var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, Padding = new Padding(0, 8, 0, 0), WrapContents = false }; var okay = new StudioButton { Text = "Adicionar e preparar", Size = new Size(190, 34) }; var cancel = new StudioButton { Text = "Cancelar", Size = new Size(110, 34), DialogResult = DialogResult.Cancel }; actions.Controls.Add(okay); actions.Controls.Add(cancel); root.Controls.Add(actions, 0, 2); CancelButton = cancel;
         okay.Click += (_, _) => { if (Mode == ImportMode.Local ? Files.Length == 0 : string.IsNullOrWhiteSpace(Input)) return; DialogResult = DialogResult.OK; Close(); };
         csvButton.Click += async (_, _) => { using var dialog = new OpenFileDialog { Filter = "CSV|*.csv|Todos os arquivos|*.*", Title = "Importar CSV" }; if (dialog.ShowDialog(this) != DialogResult.OK) return; try { text.Text = await File.ReadAllTextAsync(dialog.FileName); csv = true; } catch (Exception ex) { MessageBox.Show(this, ex.Message, "Importar CSV"); } };
         browse.Click += (_, _) => { using var dialog = new OpenFileDialog { Filter = "MP3|*.mp3", Multiselect = true, Title = "Importar MP3s locais" }; if (dialog.ShowDialog(this) == DialogResult.OK) { var values = Files.Concat(dialog.FileNames).Distinct(StringComparer.OrdinalIgnoreCase).ToArray(); files.Items.Clear(); files.Items.AddRange(values); } };
@@ -68,7 +92,7 @@ internal sealed class CandidateDialog : Form
     internal CandidateDialog(IReadOnlyList<YouTubeCandidate> candidates)
     {
         SuspendLayout(); AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96, 96); Font = new Font("Segoe UI", 10); Text = "Escolher versão no YouTube"; ClientSize = new Size(800, 420); StartPosition = FormStartPosition.CenterParent;
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 1, RowCount = 3 }; root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 64)); root.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48)); Controls.Add(root); root.Controls.Add(StudioTheme.Caption("Confira artista, título e duração. Selecionar uma versão não inicia o download.", 10), 0, 0); root.Controls.Add(list, 0, 1); foreach (var value in candidates) list.Items.Add(new Item(value)); if (list.Items.Count > 0) list.SelectedIndex = 0;
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), ColumnCount = 1, RowCount = 3 }; root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 64)); root.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48)); Controls.Add(root); root.Controls.Add(StudioTheme.Caption("Confira artista, título e duração. Confirmar uma versão prepara a faixa automaticamente.", 10), 0, 0); root.Controls.Add(list, 0, 1); foreach (var value in candidates) list.Items.Add(new Item(value)); if (list.Items.Count > 0) list.SelectedIndex = 0;
         var actions = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, Padding = new Padding(0, 8, 0, 0) }; var okay = new StudioButton { Text = "Usar esta versão", Size = new Size(170, 34), Enabled = candidates.Count > 0 }; var cancel = new StudioButton { Text = "Cancelar", Size = new Size(110, 34), DialogResult = DialogResult.Cancel }; actions.Controls.Add(okay); actions.Controls.Add(cancel); root.Controls.Add(actions, 0, 2); CancelButton = cancel; okay.Click += (_, _) => { DialogResult = DialogResult.OK; Close(); }; Shown += (_, _) => StudioTheme.DarkTitle(this); StudioTheme.Apply(this); ResumeLayout(true);
     }
     private sealed record Item(YouTubeCandidate Value) { public override string ToString() => $"{Value.Title}  /  {Value.Artist}  /  {(Value.DurationSeconds is double seconds ? TimeSpan.FromSeconds(seconds).ToString(@"m\:ss") : "—")}"; }

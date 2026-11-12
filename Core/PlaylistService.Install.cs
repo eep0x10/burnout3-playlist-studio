@@ -210,11 +210,11 @@ public sealed partial class PlaylistService
 
                 bool superseded=copies.Any(c=>c.TrackId==stale.Value.TrackId&&manifest.Files.ContainsKey(c.Name));
 
-                if((!requestedIds.Contains(stale.Value.TrackId)||superseded)&&prior.ContainsKey(stale.Key)&&SafeFiles.Hash(target)==stale.Value.Sha256)File.Delete(target);
+                if((!requestedIds.Contains(stale.Value.TrackId)||superseded)&&prior.ContainsKey(stale.Key)&&SafeFiles.Hash(target)==stale.Value.Sha256)VerifiedFileDeletion.Delete(target,stale.Value.Sha256,GameRunning);
 
             }
 
-            State(d=>{if(updateMusicRoot)d.TakedawnRoot=root;foreach(var track in Find(d,playlistId).Tracks){var audio=manifest.Files.FirstOrDefault(p=>p.Value.TrackId==track.Id&&p.Key.EndsWith(".mp3",StringComparison.OrdinalIgnoreCase));track.InstalledPath=audio.Key!=null?Path.Combine(folder,audio.Key):null;}return 0;},true);
+            State(d=>{if(updateMusicRoot)d.TakedawnRoot=root;d.Exports.RemoveAll(e=>e.Folder.Equals(folder,StringComparison.OrdinalIgnoreCase));d.Exports.Add(new(playlistId,root,folder));foreach(var track in Find(d,playlistId).Tracks){var audio=manifest.Files.FirstOrDefault(p=>p.Value.TrackId==track.Id&&p.Key.EndsWith(".mp3",StringComparison.OrdinalIgnoreCase));track.InstalledPath=audio.Key!=null?Path.Combine(folder,audio.Key):null;}return 0;},true);
 
             return new(root,folder,copied,skipped,warnings);
 
@@ -224,11 +224,8 @@ public sealed partial class PlaylistService
 
     }
 
-    private static void EnsureTakedawnClosed()
-    {
-        foreach(var process in System.Diagnostics.Process.GetProcessesByName("Takedawn"))
-        {process.Dispose();throw new InvalidOperationException("Feche Takedawn antes de instalar ou alterar a configuração.");}
-    }
+    private void EnsureTakedawnClosed()
+    {if(GameRunning())throw new InvalidOperationException("Feche Takedawn antes de instalar ou alterar a configuração.");}
     private static string GameText(string text)=>new(text.Select(c=>c>=32&&c<=255?c:'_').ToArray());
 
     private static void ValidateManagedName(string folder,string name,Guid track)

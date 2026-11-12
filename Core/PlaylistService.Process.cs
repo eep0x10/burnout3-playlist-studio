@@ -59,7 +59,7 @@ public sealed partial class PlaylistService
     {
         var snapshot=State(d=>Find(d,playlistId,trackId) with{});string final=AudioPath(playlistId,trackId);
         if(File.Exists(final)&&!snapshot.MetadataDirty)
-        {if(snapshot.DurationSeconds==null)await ProbeDuration(playlistId,trackId,final,token);if(snapshot.LyricsStatus is LyricsStatus.Pending or LyricsStatus.Failed)await FetchLyrics(playlistId,trackId,token);return;}
+        {if(snapshot.DurationSeconds==null)await ProbeDuration(playlistId,trackId,final,token);if(snapshot.LyricsStatus is LyricsStatus.Pending or LyricsStatus.Failed)await FetchLyrics(playlistId,trackId,token);RecordManagedFiles(playlistId,trackId);return;}
         string stage=SafeFiles.Within(DataDirectory,Path.Combine(DataDirectory,"staging",Guid.NewGuid().ToString("N")));Directory.CreateDirectory(stage);
         try
         {
@@ -85,7 +85,8 @@ public sealed partial class PlaylistService
             var converted=await runner.RunAsync(tools.FfmpegPath,args,null,limit.Token);if(converted.ExitCode!=0||!File.Exists(output)||new FileInfo(output).Length==0)throw new IOException("FFmpeg falhou: "+Tail(converted.StandardError));
             Directory.CreateDirectory(Path.GetDirectoryName(final)!);if(File.Exists(final))File.Replace(output,final,final+".bak");else File.Move(output,final);
             State(d=>{var t=Find(d,playlistId,trackId);t.Status=TrackStatus.Downloaded;t.Error=null;t.MetadataDirty=false;return 0;},true);
-            progress?.Report(new(playlistId,trackId,"lyrics",null,"Consultando letra (falha não impede o MP3)…"));await FetchLyrics(playlistId,trackId,token);
+            RecordManagedFiles(playlistId,trackId);
+            progress?.Report(new(playlistId,trackId,"lyrics",null,"Consultando letra (falha não impede o MP3)…"));await FetchLyrics(playlistId,trackId,token);RecordManagedFiles(playlistId,trackId);
             progress?.Report(new(playlistId,trackId,"done",100,"MP3 pronto."));
         }
         finally{if(Directory.Exists(stage))Directory.Delete(stage,true);}

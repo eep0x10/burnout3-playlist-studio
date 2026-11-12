@@ -70,7 +70,7 @@ public sealed partial class PlaylistService
             {
                 var playlist=Find(d,record.PlaylistId);
                 if(!playlist.Tracks.Select(t=>t.Id).SequenceEqual(record.TrackIds)||playlist.Tracks.Any(t=>t.Status!=TrackStatus.Downloaded||t.MetadataDirty))throw new IOException("Playlist mudou durante a ativação.");
-                d.Active=record;var manifest=ReadActiveManifest(record);
+                d.Active=record;Find(d,record.PlaylistId).PendingActivation=false;var manifest=ReadActiveManifest(record);
                 foreach(var track in playlist.Tracks){var audio=manifest.Files.First(f=>f.Value.TrackId==track.Id&&f.Key.EndsWith(".mp3",StringComparison.OrdinalIgnoreCase));track.InstalledPath=Path.Combine(record.MusicRoot,audio.Key);}return 0;
             },true);
         }

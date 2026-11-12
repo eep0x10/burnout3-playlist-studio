@@ -14,6 +14,10 @@ public sealed partial class PlaylistService
         public List<DownloadJob> Jobs {get;set;}=[];
         public string TakedawnRoot {get;set;}=DefaultMusicRoot;
         public ActivationRecord? Active {get;set;}
+        public List<RemovalRecord> Removals {get;set;}=[];
+        public List<Guid> DeletedPlaylists {get;set;}=[];
+        public List<ExportRecord> Exports {get;set;}=[];
+        public List<DeferredFile> DeferredFiles {get;set;}=[];
     }
     private static readonly JsonSerializerOptions Json=new(){WriteIndented=true,Converters={new JsonStringEnumConverter()}};
     private static readonly HttpClient DefaultHttp=new(){Timeout=TimeSpan.FromMinutes(10)};
@@ -59,7 +63,7 @@ public sealed partial class PlaylistService
     private Track Snapshot(Guid playlist,Track t)
     {
         string audio=AudioPath(playlist,t.Id),lrc=SidecarPath(playlist,t.Id,"lrc"),txt=SidecarPath(playlist,t.Id,"txt");
-        return t with{LocalPath=File.Exists(audio)?audio:null,LyricsPath=File.Exists(lrc)?lrc:File.Exists(txt)?txt:null};
+        return t with{ManagedHashes=new(t.ManagedHashes),LocalPath=File.Exists(audio)?audio:null,LyricsPath=File.Exists(lrc)?lrc:File.Exists(txt)?txt:null};
     }
     private Playlist Snapshot(Playlist p)=>p with{Tracks=p.Tracks.Select(t=>Snapshot(p.Id,t)).ToList()};
     public LibrarySnapshot GetLibrary()=>State(d=>new LibrarySnapshot(d.Playlists.Select(Snapshot).ToList(),d.Jobs.Select(j=>j with{}).ToList(),d.TakedawnRoot){ActivePlaylistId=d.Active?.PlaylistId});
@@ -69,24 +73,24 @@ public sealed partial class PlaylistService
         State(d=>{d.TakedawnRoot=path;return 0;},true);return GetLibrary();
     }
     public Playlist CreatePlaylist(string name)=>State(d=>{name=Required(name,120,"Nome");if(d.Playlists.Count>=100)throw new ArgumentException("Limite de 100 playlists do Takedawn.");var p=new Playlist{Name=name};d.Playlists.Add(p);return Snapshot(p);},true);
-    public Playlist RenamePlaylist(Guid playlistId,string name)=>State(d=>{var p=Find(d,playlistId);p.Name=Required(name,120,"Nome");return Snapshot(p);},true);
-    public void DeletePlaylist(Guid playlistId)=>State(d=>{var p=Find(d,playlistId);d.Playlists.Remove(p);d.Jobs.RemoveAll(j=>j.PlaylistId==playlistId);return 0;},true);
+    public Playlist RenamePlaylist(Guid playlistId,string name)=>State(d=>{var p=Find(d,playlistId);p.Name=Required(name,120,"Nome");if(d.Active?.PlaylistId==playlistId)p.PendingActivation=true;return Snapshot(p);},true);
+    public void DeletePlaylist(Guid playlistId)=>RemoveCatalog(playlistId,null);
     public Track AddTrack(Guid playlistId,string queryOrUrl,string?artist=null)=>State(d=>
     {
         var p=Find(d,playlistId);if(p.Tracks.Count>=500)throw new ArgumentException("Limite de 500 faixas por playlist.");string source=Required(queryOrUrl,2000,"Faixa");
         if(Uri.TryCreate(source,UriKind.Absolute,out var uri)&&uri.Scheme is "http" or "https"&&!IsYouTube(uri))throw new ArgumentException("Use um link do YouTube ou o nome da faixa; Spotify tem importador próprio.");
         var track=new Track{Title=source,Artist=Optional(artist,250,"Artista"),Source=source};
         if(IsYouTubeUrl(source)){if(IsPlaylistUrl(source))throw new ArgumentException("Use o importador de playlist para links com list=.");track.YouTubeUrl=source;track.Status=TrackStatus.Ready;}
-        p.Tracks.Add(track);return Snapshot(p.Id,track);
+        p.Tracks.Add(track);if(d.Active?.PlaylistId==playlistId)p.PendingActivation=true;return Snapshot(p.Id,track);
     },true);
-    public Track UpdateTrack(Guid playlistId,Guid trackId,string title,string artist,string album="")=>State(d=>{var t=Find(d,playlistId,trackId);t.Title=Required(title,250,"Título");t.Artist=Optional(artist,250,"Artista");t.Album=Optional(album,250,"Álbum");t.MetadataDirty=true;return Snapshot(playlistId,t);},true);
-    public void RemoveTrack(Guid playlistId,Guid trackId)=>State(d=>{Find(d,playlistId).Tracks.Remove(Find(d,playlistId,trackId));d.Jobs.RemoveAll(j=>j.TrackId==trackId);return 0;},true);
-    public void ReorderTrack(Guid playlistId,Guid trackId,int newIndex)=>State(d=>{var p=Find(d,playlistId);var t=Find(d,playlistId,trackId);if(newIndex<0||newIndex>=p.Tracks.Count)throw new ArgumentOutOfRangeException(nameof(newIndex));p.Tracks.Remove(t);p.Tracks.Insert(newIndex,t);return 0;},true);
+    public Track UpdateTrack(Guid playlistId,Guid trackId,string title,string artist,string album="")=>State(d=>{var t=Find(d,playlistId,trackId);t.Title=Required(title,250,"Título");t.Artist=Optional(artist,250,"Artista");t.Album=Optional(album,250,"Álbum");t.MetadataDirty=true;t.MetadataOverride=true;if(d.Active?.PlaylistId==playlistId)Find(d,playlistId).PendingActivation=true;return Snapshot(playlistId,t);},true);
+    public void RemoveTrack(Guid playlistId,Guid trackId)=>RemoveCatalog(playlistId,trackId);
+    public void ReorderTrack(Guid playlistId,Guid trackId,int newIndex)=>State(d=>{var p=Find(d,playlistId);var t=Find(d,playlistId,trackId);if(newIndex<0||newIndex>=p.Tracks.Count)throw new ArgumentOutOfRangeException(nameof(newIndex));p.Tracks.Remove(t);p.Tracks.Insert(newIndex,t);if(d.Active?.PlaylistId==playlistId)p.PendingActivation=true;return 0;},true);
     public IReadOnlyList<Track> ImportLocalFiles(Guid playlistId,IEnumerable<string> paths)
     {
         var added=new List<Track>();foreach(string input in paths)
         {string path=Path.GetFullPath(input);if(!File.Exists(path)||!new[]{".mp3",".flac",".ogg",".wav"}.Contains(Path.GetExtension(path).ToLowerInvariant()))throw new ArgumentException("Arquivo local deve ser MP3, FLAC, OGG ou WAV existente.");
-            var result=State(d=>{var p=Find(d,playlistId);if(p.Tracks.Count>=500)throw new ArgumentException("Limite de faixas.");var t=new Track{Title=Path.GetFileNameWithoutExtension(path),Source=path};p.Tracks.Add(t);return Snapshot(playlistId,t);},true);added.Add(result);}
+            var result=State(d=>{if(!File.Exists(path))throw new IOException("Fonte local deixou de existir antes da importação.");var p=Find(d,playlistId);if(p.Tracks.Count>=500)throw new ArgumentException("Limite de faixas.");var t=new Track{Title=Path.GetFileNameWithoutExtension(path),Source=path};p.Tracks.Add(t);return Snapshot(playlistId,t);},true);added.Add(result);}
         return added;
     }
     public ImportResult ImportText(Guid playlistId,string text)
