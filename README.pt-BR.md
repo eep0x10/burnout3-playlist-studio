@@ -23,12 +23,29 @@ As capturas usam faixas originais sintetizadas para demonstração. A biblioteca
 
 Arquivos locais MP3, WAV, FLAC e Ogg também podem ser usados; os originais são preservados. Importar outra playlist não troca a trilha ativa sem você escolher **Usar no jogo**.
 
+## Do atalho à corrida: sincronização automática
+
+Configure uma vez: importe a URL da playlist, escolha **Usar no jogo** com o Takedawn fechado e clique em **Criar atalho** para selecionar o `Takedawn.exe`.
+
+Depois disso, basta abrir **Takedawn + Playlist Studio** na Área de Trabalho:
+
+1. A janela de sincronização consulta a origem da playlist ativa.
+2. Novas músicas são baixadas e preparadas automaticamente; a atualização aguarda terminar.
+3. Quando a trilha está pronta, o Takedawn inicia e o gerenciador fica minimizado para mostrar os nomes das músicas.
+4. Ao sair do jogo, o gerenciador fecha junto.
+
+![Janela de sincronização antes de abrir o jogo, capturada com serviço de demonstração](docs/screenshots/prelaunch-sync.png)
+
+*Captura da janela real com um serviço de demonstração isolado, sem jogo, biblioteca pessoal ou download real. Ela mostra o progresso e o botão Cancelar; não é uma captura de uma corrida.*
+
+Não precisa abrir os dois programas nem clicar em **Atualizar** a cada partida. **Cancelar** ou um erro impede a abertura do jogo; uma lista parcial pede confirmação antes de continuar com a seleção preservada. Se não houver playlist ativa, escolha **Usar no jogo** primeiro. Abrir `Takedawn.exe` diretamente ignora essa preparação.
+
 ## Sincronizar com YouTube e Spotify
 
 **Desde a versão 1.2.1, o atalho integrado sincroniza a playlist ativa antes de abrir o Takedawn.** Ele mostra o progresso, baixa/prepara as mudanças e só depois inicia o jogo com o gerenciador minimizado. Não precisa clicar em Atualizar antes de jogar. Cancelar ou uma falha impede a abertura; lista parcial pede confirmação para continuar com a seleção preservada.
 
 - Importe o **link da playlist**, não apenas os links de vídeos individuais. A origem fica salva na biblioteca.
-- Clique em **Atualizar** depois de editar a lista no YouTube/Spotify. O programa identifica novas faixas, baixa e prepara automaticamente o áudio e as letras disponíveis. Não é necessário clicar em um botão de download.
+- Depois de editar a lista no YouTube/Spotify, use o atalho integrado para sincronizar antes de jogar. **Atualizar** permite antecipar a preparação sem abrir o jogo. O programa identifica novas faixas e prepara automaticamente o áudio e as letras disponíveis.
 - Uma leitura completa da origem também acompanha exclusões e ordem. Leituras parciais ou com erro preservam as faixas ausentes e mostram um aviso, para não apagar músicas por engano.
 - Para uma playlist antiga sem origem salva, use **Fonte…** para vincular a URL uma vez. Músicas adicionadas manualmente continuam independentes da origem.
 - Remover faixas ou playlists limpa as cópias gerenciadas correspondentes. Arquivos locais originais, arquivos desconhecidos e cópias alteradas externamente são preservados; limitações de limpeza são informadas.

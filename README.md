@@ -23,12 +23,29 @@ The interface currently uses Brazilian Portuguese. Screenshots show original syn
 
 The first preparation downloads verified copies of **yt-dlp**, **FFmpeg/ffprobe**, and **Deno** from their upstream sources. These stay in the portable `tools/` folder. Downloads require internet and additional disk space.
 
+## From shortcut to race: automatic synchronization
+
+Set up once: import the playlist URL, choose **Usar no jogo** with Takedawn closed, then click **Criar atalho** and select `Takedawn.exe`.
+
+After that, open **Takedawn + Playlist Studio** on your desktop:
+
+1. The synchronization window refreshes the active playlist's source.
+2. New songs are downloaded/prepared automatically, and launch waits for preparation to finish.
+3. Once ready, Takedawn starts and the manager stays minimized to display track notifications.
+4. Exiting the game closes the manager too.
+
+![Prelaunch synchronization window, captured with an isolated demonstration service](docs/screenshots/prelaunch-sync.png)
+
+*The actual window is shown using an isolated demonstration service: no game, personal library or real download. It demonstrates progress and cancellation, not in-game gameplay.*
+
+You do not need to open both apps or click **Atualizar** before each session. Cancellation/errors abort launch; partial lists require confirmation to continue with the preserved selection. If no playlist is active, choose **Usar no jogo** first. Starting `Takedawn.exe` directly bypasses preparation.
+
 ## Synchronize YouTube and Spotify playlists
 
 **Since 1.2.1, the combined shortcut synchronizes the active playlist before starting Takedawn.** It shows progress, prepares changes, then starts the game and minimized manager. You do not need to click Update before playing. Cancellation/errors abort launch; partial lists require explicit confirmation to continue with the preserved selection.
 
 - Import the **playlist URL**, rather than individual video links, to retain its source.
-- After editing it on YouTube/Spotify, click **Atualizar** (Update). New tracks are downloaded and prepared automatically with available lyrics.
+- After editing it on YouTube/Spotify, use the combined shortcut to synchronize before playing. **Atualizar** (Update) lets you prepare ahead of time without launching the game. New tracks are prepared automatically with available lyrics.
 - Complete source responses reconcile removals and order. Partial/error responses preserve missing tracks and show a warning instead of treating them as deleted.
 - Use **Fonte…** (Source) to link an old playlist whose origin was not saved. Manually added tracks remain independent.
 - Removing tracks/playlists cleans up their managed copies; original local imports and unknown/externally modified files are preserved. Cleanup limitations are reported.
