@@ -10,6 +10,8 @@ The style is inspired by the original track-change banner, using the manager's c
 
 ## Start together with Takedawn (1.1.1+)
 
+In 1.1.3+, click **Criar atalho** in the manager and select `Takedawn.exe`. This creates **Takedawn + Playlist Studio** on your Windows desktop without starting the game. Replacement of an existing shortcut requires confirmation. Use the button again after moving the manager or game. The manual setup below remains available.
+
 The portable package includes `Launch-Takedawn.vbs`. Create a Windows shortcut with this target, replacing both example paths with your actual locations:
 
 ```text

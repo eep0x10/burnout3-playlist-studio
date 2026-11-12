@@ -48,3 +48,9 @@ The companion launcher was tested using harmless probe executables in folders co
 ## 1.1.2 automatic close verification
 
 Manager-only probes confirmed graceful exit from the minimized state, isolation between data folders, and a close request issued 500 ms before manager startup. With no manager, the close command returned silently after its bounded five-second wait without creating a data directory or opening a window. The close event uses the existing cancellation and notification-cleanup pipeline. No game was opened.
+
+## 1.1.3 shortcut button verification
+
+The existing native desktop design is retained. **Criar atalho** sits beside notification controls and gives immediate dialog/status feedback; no new motion is introduced. A CUA check confirmed the button is visible, the picker opens at the detected game location, and cancelling preserves the shortcut and preferences. The screenshot uses the original four-track demo library. This WinForms application retains its desktop minimum size rather than providing a mobile layout.
+
+An independent 17-check Windows COM probe created and read shortcuts only in a temporary folder. It verified paths containing spaces, target/arguments/working directory/icon, refusal to overwrite without permission, explicit replacement, and rejection of missing files, invalid names, percent signs and invalid destinations. The GUI defaults replacement confirmation to **No**. No generated shortcut or game was executed.

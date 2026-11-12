@@ -15,6 +15,7 @@ public sealed class StudioForm : Form
     private readonly ToolTip tips = new();
     private readonly CheckBox songNoticeEnabled = new() { Text = "Aviso da música no jogo", AutoSize = true, Checked = true, Font = new Font("Segoe UI", 9) };
     private readonly Button testNotice = Button("Testar aviso", 115);
+    private readonly Button createShortcut = Button("Criar atalho", 115);
     private readonly Label watcherState = StudioTheme.Caption("Preparando detector…", 9);
     private readonly SemaphoreSlim watcherGate = new(1, 1);
     private NowPlayingOverlay? songOverlay;
@@ -76,6 +77,8 @@ public sealed class StudioForm : Form
         var header = new Panel { Dock = DockStyle.Fill }; var brand = new Panel { Dock = DockStyle.Left, Width = 275 }; brand.Controls.Add(new Label { Text = "BURNOUT 3", Dock = DockStyle.Fill, Font = new Font("Bahnschrift SemiCondensed", 28, FontStyle.Bold), ForeColor = StudioTheme.White }); brand.Controls.Add(new Label { Text = "PLAYLIST STUDIO  /  CUSTOM TRAX", Tag = "accent", Dock = DockStyle.Bottom, Height = 28, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = StudioTheme.Orange });
         var headerActions = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 44, FlowDirection = FlowDirection.RightToLeft, WrapContents = false, Padding = new Padding(0, 4, 0, 0) }; headerActions.Controls.Add(install); headerActions.Controls.Add(import); headerActions.Controls.Add(tools); headerActions.Controls.Add(updateGame); header.Controls.Add(headerActions);
         var noticePreferences = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 32, WrapContents = false }; songNoticeEnabled.Margin = new Padding(4, 5, 8, 2); testNotice.Height = 24; testNotice.Font = new Font("Segoe UI", 9); testNotice.Margin = new Padding(4, 2, 8, 2); watcherState.AutoSize = false; watcherState.Width = 240; watcherState.Height = 24; watcherState.AutoEllipsis = true; watcherState.TextAlign = ContentAlignment.MiddleLeft; noticePreferences.Controls.Add(songNoticeEnabled); noticePreferences.Controls.Add(testNotice); noticePreferences.Controls.Add(watcherState); header.Controls.Add(noticePreferences); header.Controls.Add(brand); header.Controls.Add(new RacingSignature()); root.Controls.Add(header, 0, 0);
+        noticePreferences.Controls.Add(createShortcut); createShortcut.Height = 24; createShortcut.Font = new Font("Segoe UI", 9); createShortcut.Margin = new Padding(4, 2, 8, 2);
+        tips.SetToolTip(createShortcut, "Cria um atalho na Área de Trabalho para abrir o jogo com o gerenciador minimizado e fechá-lo junto. Não inicia o jogo agora.");
         tips.SetToolTip(songNoticeEnabled, "Requer o gerenciador aberto e o Takedawn em primeiro plano. É uma sobreposição externa; tela cheia exclusiva pode não exibi-la."); tips.SetToolTip(testNotice, "Mostra uma demonstração de 6 segundos, sem abrir nem consultar o jogo. Não ativa outra janela.");
         setup.Text = "MP3 → PLAYLIST\nEA GAMES TRAX"; setup.AutoSize = false; setup.TextAlign = ContentAlignment.MiddleLeft;
         var body = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 1 }; body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 190)); body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); body.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 290)); root.Controls.Add(body, 0, 1);
@@ -101,6 +104,7 @@ public sealed class StudioForm : Form
     }
     private void WireActions()
     {
+        createShortcut.Click += async (_, _) => await CreateTakedawnShortcut();
         songNoticeEnabled.CheckedChanged += async (_, _) => { if (!songNoticeEnabled.Checked) songOverlay?.CancelNotification(); SaveUiPreferences(); await UpdateSongWatcher(); };
         testNotice.Click += (_, _) => ShowNoticeDemonstration();
         playlists.SelectedIndexChanged += (_, _) => { if (filling || playlists.SelectedItem is not PlaylistItem value) return; selectedPlaylist = value.Value.Id; selectedTrack = null; RefreshTracks(); };
@@ -173,7 +177,7 @@ public sealed class StudioForm : Form
         download.Enabled = onlyDownload.Enabled = !busy && CurrentPlaylist is { Tracks.Count: > 0 };
         install.Enabled = !busy && CurrentPlaylist is { Tracks.Count: > 0 } selected && selected.Tracks.All(IsPrepared);
         tips.SetToolTip(install, install.Enabled ? "Configura somente esta playlist para a próxima execução do jogo." : "Adicione faixas e prepare todas elas antes de carregar a playlist.");
-        edit.Enabled = remove.Enabled = up.Enabled = down.Enabled = version.Enabled = one.Enabled = !busy && hasTrack; folder.Enabled = !busy; cancel.Enabled = busy;
+        edit.Enabled = remove.Enabled = up.Enabled = down.Enabled = version.Enabled = one.Enabled = !busy && hasTrack; folder.Enabled = createShortcut.Enabled = !busy; cancel.Enabled = busy;
         previous.Enabled = next.Enabled = hasPlaylist; play.Enabled = hasTrack || audio.HasTrack;
     }
     private async Task Run(string message, Func<CancellationToken, Task> action)
@@ -233,6 +237,30 @@ public sealed class StudioForm : Form
         if (!Path.GetFileName(dialog.FileName).Equals("Takedawn.exe", StringComparison.OrdinalIgnoreCase)) { SetStatus("Selecione o Takedawn.exe do jogo, não um instalador ou outro programa."); return; }
         takedawnExecutable = dialog.FileName; await RefreshActivation();
         if (SaveUiPreferences()) SetStatus(compatibility?.Message ?? "Executável selecionado; versão não identificada.");
+    }
+    private async Task CreateTakedawnShortcut()
+    {
+        using var dialog = new OpenFileDialog { Title = "Criar atalho — selecione o Takedawn.exe do jogo", Filter = "Executável do jogo|Takedawn.exe", CheckFileExists = true, Multiselect = false };
+        string? current = takedawnExecutable ?? compatibility?.ExecutablePath;
+        if (current is not null && File.Exists(current)) { dialog.InitialDirectory = Path.GetDirectoryName(current); dialog.FileName = Path.GetFileName(current); }
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        try
+        {
+            string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            if (string.IsNullOrWhiteSpace(desktop)) throw new DirectoryNotFoundException("A Área de Trabalho deste usuário não foi encontrada.");
+            string output = Path.Combine(desktop, "Takedawn + Playlist Studio.lnk");
+            bool overwrite = File.Exists(output);
+            if (overwrite && MessageBox.Show(this, "Já existe Takedawn + Playlist Studio na Área de Trabalho. Substituir esse atalho?", "Substituir atalho", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
+            string created = TakedawnShortcut.Create(dialog.FileName, AppContext.BaseDirectory, output, overwrite);
+            takedawnExecutable = dialog.FileName;
+            bool saved = SaveUiPreferences();
+            await RefreshActivation();
+            string message = "Atalho criado em: " + created + "\n\nAo usá-lo, o gerenciador abrirá minimizado com o aviso de música habilitado e fechará junto com o jogo. Nenhum jogo foi iniciado agora.";
+            if (!saved) message += "\n\nO atalho foi criado, mas a preferência do executável não pôde ser salva.";
+            SetStatus(message);
+            MessageBox.Show(this, message, "Atalho criado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex) { SetStatus("Não foi possível criar o atalho: " + ex.Message); MessageBox.Show(this, ex.Message, "Não foi possível criar o atalho", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
     }
     private async Task RefreshActivation()
     {

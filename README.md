@@ -25,7 +25,19 @@ The first preparation downloads verified copies of **yt-dlp**, **FFmpeg/ffprobe*
 
 ## Start and close together with Takedawn
 
-Portable **1.1.2 or later** includes `Launch-Takedawn.vbs`. Set up a shortcut once:
+In **1.1.3 or later**, create the shortcut inside the manager:
+
+1. Extract the entire portable folder and run `BurnoutPlaylistStudio.exe`.
+2. Click **Criar atalho** (Create shortcut) and select your installed `Takedawn.exe`.
+3. Use **Takedawn + Playlist Studio**, created on your desktop. The manager opens minimized with notifications enabled and closes when you exit the game. Creating the shortcut does not launch the game.
+
+![Create shortcut button in the manager header, with demonstration library](docs/screenshots/shortcut.png)
+
+The app asks before replacing a shortcut with the same name. If you move either application, use **Criar atalho** again to update the paths.
+
+### Manual alternative (1.1.2 or later)
+
+The package includes `Launch-Takedawn.vbs`. To configure it yourself:
 
 1. Extract the ZIP and keep `Launch-Takedawn.vbs` beside `BurnoutPlaylistStudio.exe`.
 2. Right-click your Windows desktop → **New → Shortcut**.

@@ -25,7 +25,19 @@ As capturas usam faixas originais sintetizadas para demonstração. A biblioteca
 
 ## Abrir e fechar junto com o Takedawn
 
-O portable **1.1.2 ou mais recente** inclui `Launch-Takedawn.vbs`. Configure um atalho uma única vez:
+Na versão **1.1.3 ou mais recente**, o próprio gerenciador cria o atalho:
+
+1. Extraia toda a pasta do portable e abra `BurnoutPlaylistStudio.exe`.
+2. Clique em **Criar atalho** e escolha o `Takedawn.exe` instalado no seu PC.
+3. Use **Takedawn + Playlist Studio**, criado na Área de Trabalho. O gerenciador abre minimizado com os avisos ativos e fecha quando você sair do jogo. Criar o atalho não abre o jogo.
+
+![Botão Criar atalho no cabeçalho do gerenciador, com biblioteca de demonstração](docs/screenshots/shortcut.png)
+
+Se já existir um atalho com esse nome, o aplicativo pede confirmação antes de substituí-lo. Se mover o jogo ou o portable, clique em **Criar atalho** novamente para atualizar os caminhos.
+
+### Alternativa manual (1.1.2 ou mais recente)
+
+O pacote inclui `Launch-Takedawn.vbs`. Se preferir configurar por conta própria:
 
 1. Extraia o ZIP e mantenha `Launch-Takedawn.vbs` na mesma pasta de `BurnoutPlaylistStudio.exe`.
 2. Na Área de Trabalho, clique com o botão direito → **Novo → Atalho**.
