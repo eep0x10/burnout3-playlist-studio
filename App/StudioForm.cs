@@ -400,6 +400,7 @@ public sealed class StudioForm : Form
     }
     internal void EnableSongNoticeFromLauncher() => DispatchNotification(() =>
     {
+        if (!busy) RefreshLibrary();
         if (!songNoticeEnabled.Checked) songNoticeEnabled.Checked = true;
         else { SaveUiPreferences(); _ = UpdateSongWatcher(); }
     });

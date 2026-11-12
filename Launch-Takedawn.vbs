@@ -1,5 +1,5 @@
 Option Explicit
-Dim shell, files, folder, manager, game, gameFolder, gameError
+Dim shell, files, folder, manager, game, gameFolder, gameError, syncExit
 Set shell = CreateObject("WScript.Shell")
 Set files = CreateObject("Scripting.FileSystemObject")
 folder = files.GetParentFolderName(WScript.ScriptFullName)
@@ -18,6 +18,8 @@ If InStr(manager, "%") > 0 Or InStr(game, "%") > 0 Then
     WScript.Quit 1
 End If
 shell.CurrentDirectory = folder
+syncExit = shell.Run(Quote(manager) & " --sync-before-game " & Quote(game), 1, True)
+If syncExit <> 0 Then WScript.Quit syncExit
 shell.Run Quote(manager) & " --minimized --enable-song-notice", 7, False
 gameFolder = files.GetParentFolderName(game)
 shell.CurrentDirectory = gameFolder

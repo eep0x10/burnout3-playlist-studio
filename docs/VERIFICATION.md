@@ -66,3 +66,11 @@ Independent verification ran 109 checks before final cleanup hardening, then sev
 CUA exercised a native sandbox using one original 12-second MP3 and real verified FFmpeg. Import automatically prepared audio; edits automatically retagged it; Source cancellation preserved the link; Usar no jogo activated only the sandbox export/config; deletion removed the managed MP3, preserved the original hash and cleared empty-sandbox custom music settings. Updated screenshots show this demo. No real user library/config or game process was used in UI tests.
 
 Live-provider synchronization and gameplay were not tested. Partial-source and deferred application are covered synthetically; actual in-game selection remains user validation.
+
+## 1.2.1 prelaunch synchronization
+
+The integrated script waits for --sync-before-game to finish before starting the minimized manager and game. A 28-check independent launcher probe used harmless executables and gates to verify ordering, success, error7 and cancellation2; nonzero results started no game/manager/close request. Paths and arguments with spaces were checked.
+
+AppTests contains 15 injected-service checks for the preparation policy (success, active selection, forwarding, game availability, failed/pending/unapplied results, cancellation and exception propagation). No filesystem, network, game or UI is used by that suite. The Windows build workflow runs it separately from Core checks.
+
+CUA exercised only an explicitly labelled demonstration service: progress was legible, Cancel waited for async cleanup and the probe exited2. The screenshot is a demonstration, not a live platform sync. Actual game launch remains user validation; no real game or installed shortcut was executed for this change.

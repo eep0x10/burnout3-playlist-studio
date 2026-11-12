@@ -25,6 +25,8 @@ Arquivos locais MP3, WAV, FLAC e Ogg também podem ser usados; os originais são
 
 ## Sincronizar com YouTube e Spotify
 
+**Desde a versão 1.2.1, o atalho integrado sincroniza a playlist ativa antes de abrir o Takedawn.** Ele mostra o progresso, baixa/prepara as mudanças e só depois inicia o jogo com o gerenciador minimizado. Não precisa clicar em Atualizar antes de jogar. Cancelar ou uma falha impede a abertura; lista parcial pede confirmação para continuar com a seleção preservada.
+
 - Importe o **link da playlist**, não apenas os links de vídeos individuais. A origem fica salva na biblioteca.
 - Clique em **Atualizar** depois de editar a lista no YouTube/Spotify. O programa identifica novas faixas, baixa e prepara automaticamente o áudio e as letras disponíveis. Não é necessário clicar em um botão de download.
 - Uma leitura completa da origem também acompanha exclusões e ordem. Leituras parciais ou com erro preservam as faixas ausentes e mostram um aviso, para não apagar músicas por engano.
@@ -32,7 +34,7 @@ Arquivos locais MP3, WAV, FLAC e Ogg também podem ser usados; os originais são
 - Remover faixas ou playlists limpa as cópias gerenciadas correspondentes. Arquivos locais originais, arquivos desconhecidos e cópias alteradas externamente são preservados; limitações de limpeza são informadas.
 - Com o Takedawn aberto, a atualização da trilha ativa e a limpeza de arquivos usados pelo jogo ficam pendentes. A preparação pode continuar, mas o programa não fecha nem reinicia o jogo por você.
 
-O botão **Atualizar** faz a consulta à plataforma; não há um serviço em segundo plano nem sincronização enquanto o gerenciador estiver fechado. A página pública do Spotify pode ser incompleta, então ela não autoriza excluir faixas ausentes. [Funcionamento, acesso Spotify e limites](docs/SYNC.md).
+O botão **Atualizar** permite antecipar essa consulta sem iniciar o jogo. A abertura pelo atalho faz isso automaticamente; abrir `Takedawn.exe` diretamente ignora essa etapa. Não há um serviço de sincronização permanente. A página pública do Spotify pode ser incompleta, então ela não autoriza excluir faixas ausentes. [Funcionamento, acesso Spotify e limites](docs/SYNC.md).
 
 ## Abrir e fechar junto com o Takedawn
 

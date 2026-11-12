@@ -4,6 +4,12 @@ Introduzida na versão **1.2.0**. O gerenciador prepara o áudio automaticamente
 
 ## Fluxo recomendado
 
+Na versão **1.2.1 ou mais recente**, o atalho integrado primeiro abre uma janela de sincronização e aguarda a atualização da playlist ativa. Só depois ele inicia o Takedawn e mantém o gerenciador minimizado para os avisos de música. Cancelar, falhar ou ficar com aplicação pendente impede a abertura do jogo. Uma resposta parcial pede confirmação antes de continuar com a seleção preservada. Se não houver playlist ativa, abra o gerenciador e escolha **Usar no jogo** primeiro.
+
+O token Spotify opcional permanece somente na sessão da interface; ele não é transferido ao processo de preparação do atalho. Nesse caso, a consulta pública pode ser parcial e pedir confirmação. O atalho pode funcionar com o gerenciador já aberto, mas uma operação concorrente pode ocupar a biblioteca; aguarde sua conclusão e tente novamente. O sincronizador nunca fecha um Takedawn já aberto para aplicar alterações.
+
+![Janela de preparação antes da corrida, com serviço de demonstração isolado](screenshots/prelaunch-sync.png)
+
 1. Crie uma playlist e importe a URL da playlist do YouTube ou Spotify. A origem fica salva. Texto, CSV e arquivos locais continuam disponíveis para listas sem vínculo remoto.
 2. Aguarde a preparação automática. Confira as versões encontradas, erros e letras disponíveis. Se precisar escolher outra correspondência do YouTube, use **Escolher versão**; a nova versão é preparada automaticamente.
 3. Com o Takedawn fechado, clique em **Usar no jogo** para escolher a trilha ativa. Importar outra lista não muda essa escolha.

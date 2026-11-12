@@ -27,6 +27,11 @@ jobs:
         run: |
           dotnet run --project Tests/Burnout3.PlaylistStudio.Tests.csproj -c Release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check prelaunch synchronization gates
+        shell: pwsh
+        run: |
+          dotnet run --project AppTests/BurnoutPlaylistStudio.AppTests.csproj -c Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Publish Windows portable
         shell: pwsh
         run: ./build.ps1

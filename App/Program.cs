@@ -8,9 +8,20 @@ internal static class Program
         var index = Array.IndexOf(args, "--data");
         var config = Array.IndexOf(args, "--config");
         bool closeAfterGame = Array.IndexOf(args, "--close-after-game") >= 0;
+        int syncBeforeGame = Array.IndexOf(args, "--sync-before-game");
         try
         {
             string dataDirectory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(index >= 0 && index + 1 < args.Length ? args[index + 1] : Path.Combine(AppContext.BaseDirectory, "data")));
+            if (syncBeforeGame >= 0)
+            {
+                ApplicationConfiguration.Initialize();
+                if (syncBeforeGame + 1 >= args.Length || args[syncBeforeGame + 1].StartsWith("--", StringComparison.Ordinal)) throw new ArgumentException("Informe o caminho do Takedawn.exe após --sync-before-game.");
+                string game = Path.GetFullPath(args[syncBeforeGame + 1]);
+                if (!File.Exists(game) || !Path.GetFileName(game).Equals("Takedawn.exe", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Selecione o Takedawn.exe existente do jogo para atualizar antes de iniciar.");
+                string configPath = Path.GetFullPath(config >= 0 && config + 1 < args.Length ? args[config + 1] : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Takedawn", "settings.toml"));
+                Environment.ExitCode = PrelaunchSync.Run(PrelaunchSync.CreateService(dataDirectory), configPath, game);
+                return;
+            }
             string identity = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(dataDirectory.ToUpperInvariant())));
             string closeEventName = @"Local\BurnoutPlaylistStudio-CloseAfterGame-" + identity;
             if (closeAfterGame)
@@ -50,6 +61,6 @@ internal static class Program
             }
             finally { instance.ReleaseMutex(); }
         }
-        catch (Exception ex) { if (!closeAfterGame) MessageBox.Show("Não foi possível abrir a biblioteca portátil. Extraia o aplicativo em uma pasta em que você possa escrever.\n\n" + ex.Message, "Burnout 3 Playlist Studio", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        catch (Exception ex) { if (syncBeforeGame >= 0) Environment.ExitCode = 1; if (!closeAfterGame) MessageBox.Show((syncBeforeGame >= 0 ? "Não foi possível atualizar antes de iniciar o jogo.\n\n" : "Não foi possível abrir a biblioteca portátil. Extraia o aplicativo em uma pasta em que você possa escrever.\n\n") + ex.Message, "Burnout 3 Playlist Studio", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
 }

@@ -25,6 +25,8 @@ The first preparation downloads verified copies of **yt-dlp**, **FFmpeg/ffprobe*
 
 ## Synchronize YouTube and Spotify playlists
 
+**Since 1.2.1, the combined shortcut synchronizes the active playlist before starting Takedawn.** It shows progress, prepares changes, then starts the game and minimized manager. You do not need to click Update before playing. Cancellation/errors abort launch; partial lists require explicit confirmation to continue with the preserved selection.
+
 - Import the **playlist URL**, rather than individual video links, to retain its source.
 - After editing it on YouTube/Spotify, click **Atualizar** (Update). New tracks are downloaded and prepared automatically with available lyrics.
 - Complete source responses reconcile removals and order. Partial/error responses preserve missing tracks and show a warning instead of treating them as deleted.
@@ -32,7 +34,7 @@ The first preparation downloads verified copies of **yt-dlp**, **FFmpeg/ffprobe*
 - Removing tracks/playlists cleans up their managed copies; original local imports and unknown/externally modified files are preserved. Cleanup limitations are reported.
 - Changing an active game export or deleting files in use is deferred while Takedawn is open. Importing a different playlist does not silently select it for the game; use **Usar no jogo**.
 
-**Atualizar** queries the platform; there is no background service or synchronization with the manager closed. Public Spotify embeds can be incomplete and do not authorize absence-based deletion. [Source access, Spotify and synchronization limits](docs/SYNC.md).
+**Atualizar** lets you refresh ahead of time without launching the game. The combined shortcut performs this step automatically; running `Takedawn.exe` directly bypasses it. No permanent background service is installed. Public Spotify embeds can be incomplete and do not authorize absence-based deletion. [Source access, Spotify and synchronization limits](docs/SYNC.md).
 
 ## Start and close together with Takedawn
 
