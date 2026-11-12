@@ -23,6 +23,26 @@ The interface currently uses Brazilian Portuguese. Screenshots show original syn
 
 The first preparation downloads verified copies of **yt-dlp**, **FFmpeg/ffprobe**, and **Deno** from their upstream sources. These stay in the portable `tools/` folder. Downloads require internet and additional disk space.
 
+## Start and close together with Takedawn
+
+Portable **1.1.2 or later** includes `Launch-Takedawn.vbs`. Set up a shortcut once:
+
+1. Extract the ZIP and keep `Launch-Takedawn.vbs` beside `BurnoutPlaylistStudio.exe`.
+2. Right-click your Windows desktop → **New → Shortcut**.
+3. Paste the target below, replacing both example paths with your actual manager and `Takedawn.exe` locations. Keep the quotation marks:
+
+   ```text
+   %SystemRoot%\System32\wscript.exe "C:\Games\Playlist Studio\Launch-Takedawn.vbs" "C:\Games\Takedawn\Takedawn.exe"
+   ```
+
+4. Name it **Takedawn + Playlist Studio**. Optionally select `Takedawn.exe` under **Properties → Change Icon**.
+5. Use this shortcut to play. It starts the manager **minimized**, enables track notifications and launches Takedawn. An already-open manager for the same data folder is reused.
+6. When Takedawn exits, the manager closes automatically. Active downloads and other operations are cancelled and allowed to finish cleanup; no process is forcibly killed.
+
+To edit playlists independently, run **`BurnoutPlaylistStudio.exe` directly**. Use the combined shortcut for automatic startup/shutdown; running `Takedawn.exe` alone bypasses this integration. The launcher follows the game process it starts, including when the manager was already open beforehand.
+
+Do not double-click the `.vbs` without supplying the game path. Use folders without percent signs. Update the shortcut if you move either application. The launcher requires Windows Script Host (`wscript.exe`); if it is disabled on your PC, open both apps manually. No Windows startup entry is installed. [Notification details and limits](docs/NOW_PLAYING.md).
+
 ## Track-change notification
 
 Keep the manager open and enable **Aviso da música no jogo**. A title/artist popup appears at the lower-left when a managed MP3 is detected in the foreground Takedawn window. You can minimize the manager and use **Testar aviso** for a labelled preview without opening the game.

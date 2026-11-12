@@ -23,6 +23,26 @@ As capturas usam faixas originais sintetizadas para demonstração. A biblioteca
 
 **Só baixar** prepara a biblioteca sem carregar no jogo. **Carregar playlist** ativa faixas já preparadas. Arquivos locais MP3, WAV, FLAC e Ogg também podem ser usados.
 
+## Abrir e fechar junto com o Takedawn
+
+O portable **1.1.2 ou mais recente** inclui `Launch-Takedawn.vbs`. Configure um atalho uma única vez:
+
+1. Extraia o ZIP e mantenha `Launch-Takedawn.vbs` na mesma pasta de `BurnoutPlaylistStudio.exe`.
+2. Na Área de Trabalho, clique com o botão direito → **Novo → Atalho**.
+3. Em **Digite o local do item**, cole o comando abaixo, trocando os dois caminhos pelos locais do seu gerenciador e do seu `Takedawn.exe`. Preserve as aspas:
+
+   ```text
+   %SystemRoot%\System32\wscript.exe "C:\Jogos\Playlist Studio\Launch-Takedawn.vbs" "C:\Jogos\Takedawn\Takedawn.exe"
+   ```
+
+4. Nomeie o atalho como **Takedawn + Playlist Studio**. Se desejar, em **Propriedades → Alterar ícone**, selecione o `Takedawn.exe`.
+5. Use esse atalho para jogar. Ele abre o gerenciador **minimizado**, habilita **Aviso da música no jogo** e inicia o Takedawn. Se o gerenciador já estiver aberto, reutiliza a instância da mesma pasta de dados.
+6. Ao fechar o Takedawn, o gerenciador fecha automaticamente. Downloads e outras operações em andamento são cancelados e aguardam a limpeza antes de sair; o processo não é encerrado à força.
+
+Para editar playlists sem abrir o jogo, abra **`BurnoutPlaylistStudio.exe` diretamente**. Para jogar com o ciclo automático de abertura e fechamento, use o atalho acima; abrir apenas `Takedawn.exe` não ativa essa integração. O gerenciador acompanha o processo iniciado pelo atalho, inclusive se já estava aberto antes.
+
+Não dê duplo clique no `.vbs` sem configurar o caminho do jogo. Use pastas sem `%` no nome. Se mover o portable ou o jogo, atualize o destino do atalho. O lançador usa o Windows Script Host (`wscript.exe`); em PCs onde ele estiver desativado, abra os dois aplicativos manualmente. Nada é instalado na inicialização do Windows. [Detalhes e limites do aviso](docs/NOW_PLAYING.md).
+
 ## Aviso ao trocar de música
 
 Mantenha o gerenciador aberto e marque **Aviso da música no jogo**. Um popup com título e artista aparece no canto inferior esquerdo quando um MP3 gerenciado é detectado no Takedawn em primeiro plano. Pode minimizar o gerenciador. **Testar aviso** mostra uma prévia identificada como demonstração, sem abrir o jogo.
